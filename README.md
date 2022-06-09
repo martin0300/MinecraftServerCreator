@@ -24,3 +24,16 @@ filename (config file)\
 --maxram (maximum ram for server **in megabytes** example 1024M (**if you don't wanna change it use default**)\
 --minram (minimum ram for server **in megabytes** example 512M (**if you don't wanna change it use default**)\
 --askinstall (ask user before installing server)\
+# Config file example
+
+    {  
+      "servertype": "spigot",  
+      "serverversion": "1.19",  
+      "servername": "spigot1.19",  
+      "installlocation": "C:\\testfolder1",  
+      "build": "latest",  
+      "createdir": true,  
+      "maxram": "default",  
+      "minram": "default",  
+      "askinstall": true
+    }

@@ -2,7 +2,7 @@
 Script for creating minecraft servers written in python.
 
 # How to use
-**Main program switches:**
+**Main program switches:**\
 --i (start in interactive mode)
 --f (start in config install mode)
 --help (show help screen)

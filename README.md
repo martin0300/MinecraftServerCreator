@@ -18,7 +18,7 @@ filename (config file)\
 --servertype (to list server types use --f --listserver)\
 --serverversion (to list server versions use --f --listserver)\
 --servername (the servers name also used for folder name when createdir is enabled)\
---installlocation (server install location (**on windows use \\ !**)\
+--installlocation (server install location (**on windows use \\\ !**)\
 --build (build number for server to list builds use --f --listbuild {versionnumber} (**only works for paper servers** for other servers use latest also works for paper!))\
 --createdir (create directory for server with the server name)\
 --maxram (maximum ram for server **in megabytes** example 1024M (**if you don't wanna change it use default**)\

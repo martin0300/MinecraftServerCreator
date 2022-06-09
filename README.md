@@ -1,5 +1,7 @@
 # MinecraftServerCreator
-Script for creating minecraft servers written in python.
+Script for creating minecraft servers written in python.\
+Uses getbukkit.org and Paper API for server jars.\
+More features coming soon!\
 
 # How to use
 **Main program switches:**\

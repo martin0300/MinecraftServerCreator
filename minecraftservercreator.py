@@ -21,7 +21,7 @@ def getbukkitdownloadparser(serverversion, servertype):
     return data
 
 
-def installer(servertype, serverversion, servername, installlocation, buildnumber, createdir, maxram, minram):
+def installer(servertype, serverversion, servername, installlocation, buildnumber, createdir, maxram, minram, menuinstall):
     print("Starting installation...")
     if createdir == "yes":
         print("Creating directory...")
@@ -83,8 +83,9 @@ def installer(servertype, serverversion, servername, installlocation, buildnumbe
         os.system("chmod +x " + scriptlocation)
     print("Created start script!")
     print("Server created!")
-    print("Press enter to go back to the menu!")
-    input()
+    if menuinstall == True:
+        print("Press enter to go back to the menu!")
+        input()
     return
 
 
@@ -106,10 +107,10 @@ def init():
     try:
         if sys.argv[1] == "--i":
             menu()
-        elif sys.argv[1] == "--c":
-            commandinstall()
         elif sys.argv[1] == "--help":
             clihelp()
+        elif sys.argv[1] == "--f":
+            configinstall()
         elif sys.argv[1] == "--version":
             mscversion()
         else:
@@ -260,7 +261,7 @@ def msccreate():
     print("Minimum ram: " + minram)
     correct = input(">")
     if correct == "yes":
-        installer(servertype, serverversion, servername, installloc, chosenbuild, createfolder, maxram, minram)
+        installer(servertype, serverversion, servername, installloc, chosenbuild, createfolder, maxram, minram, True)
         menu()
     elif correct == "no":
         print("Restarting...")
@@ -337,7 +338,7 @@ def getbukkitparser(type):
     return htmldict
 
 def clihelp():
-    print("Minecraft server creator help:\n--i (start in interactive mode)\n--c (command line install)\n--f (install from config file)\n--help (shows this screen)\n--version (shows version number)")
+    print("Minecraft server creator help:\n--i (start in interactive mode)\n--f (install from config file)\n--help (shows this screen)\n--version (shows version number)")
     mscexit()
 
 def commandinstall():
@@ -358,6 +359,214 @@ def commandinstallhelp():
 def mscversion():
     print("Minecraft server creator V" + ver + "\nRunning on " + ostype)
     mscexit()
+
+def confighelp():
+    print("Config install help:\n--help (shows this screen)\n--createconfig (creates config to modify)\n--listserver (list available server types and versions)\n--listbuild (versionnumber) (lists the builds for the version number specified (only works on paper servers))\nfilename (install from config (JSON) file)")
+    print("Config file help:\nIt must be a JSON file!\n-servertype (type afther --f --listserver to list avalible server types)\n"
+          "-serverversion (type afther --f --listserver to list avalible server versions)\n-servername (servers name and the folders if createdir is enabled)\n"
+          "-installlocation (server install location (on windows use \\\\ !))\n-build (only works on paper servers! (type latest for any server type including paper) to list builds use --f --listbuild (versionnumber))\n"
+          "-createdir (create directory with the server name)\n-maxram (maximum ram for server in megabytes example: 1024M (enter default if you don't wanna change it))\n-minram (minimum ram for server in megabytes example: 512M (enter default if you don't wanna change it))\n"
+          "-askinstall (ask user to install server)")
+    mscexit()
+
+def createinstallconf():
+    newinstallconfig = {
+        "servertype": "",
+        "serverversion": "",
+        "servername": "",
+        "installlocation": "",
+        "build": "",
+        "createdir": False,
+        "maxram": "",
+        "minram": "",
+        "askinstall": True
+    }
+    with open("installconfig.json", "w") as newconfig:
+        json.dump(newinstallconfig, newconfig)
+    print("Config created!")
+    mscexit()
+
+def startinstallconfig(filename):
+    if os.path.isfile(filename) == False:
+        print("File does not exist or unexpected switch!")
+        mscexit()
+    try:
+        with open(filename, "r") as configfile:
+            configinstallfile = json.load(configfile)
+    except ValueError:
+        print("Could not read file!")
+        mscexit()
+    print("Checking file...")
+    ##load settings
+    servertype = configinstallfile.get("servertype")
+    serverversion = configinstallfile.get("serverversion")
+    servername = configinstallfile.get("servername")
+    installlocation = configinstallfile.get("installlocation")
+    build = configinstallfile.get("build")
+    createdir = configinstallfile.get("createdir")
+    maxram = configinstallfile.get("maxram")
+    minram = configinstallfile.get("minram")
+    askinstall = configinstallfile.get("askinstall")
+    ##check server type
+    if isnoneorempty(servertype) == True:
+        print("No server type specified!")
+        mscexit()
+    badtype = False
+    for x in database.get("versions"):
+        if x == servertype:
+            badtype = False
+            break
+        else:
+            badtype = True
+    if badtype == True:
+        print("Wrong server type!")
+        mscexit()
+    ##check server version
+    if isnoneorempty(serverversion) == True:
+        print("No server version specified!")
+        mscexit()
+    badversion = False
+    for x in database.get("versions").get(servertype):
+        if x == serverversion:
+            badversion = False
+            break
+        else:
+            badversion = True
+    if badversion == True:
+        print("Wrong server version!")
+        mscexit()
+    ##check server name
+    if isnoneorempty(servername) == True:
+        print("No server name specified!")
+        mscexit()
+    ##check install location
+    if isnoneorempty(installlocation) == True:
+        print("No install location specified!")
+        mscexit()
+    if os.path.isdir(installlocation) == False:
+        print("Invalid install location!")
+        mscexit()
+    ##check build
+    if isnoneorempty(build) == True:
+        print("No build specified! Only works for paper servers! On other servers use latest! Use --f --listbuild (versionnumber) to list avalible builds!")
+        mscexit()
+    if servertype != "paper":
+        if build != "latest":
+            print("Build only works for paper servers! Use latest instead!")
+            mscexit()
+    else:
+        if build != "latest":
+            print("Downloading buildlist...")
+            buildlistpaper = requests.get("https://api.papermc.io/v2/projects/paper/versions/" + serverversion).json()
+            invalidbuild = False
+            for x in buildlistpaper.get("builds"):
+                if str(x) == build:
+                    invalidbuild = False
+                    break
+                else:
+                    invalidbuild = True
+            if invalidbuild == True:
+                print("Invalid build number!")
+                mscexit()
+    ##check createdir
+    if type(createdir) != bool:
+        print("Wrong createdir value!")
+        mscexit()
+    if createdir == True:
+        createdir = "yes"
+    else:
+        createdir = "no"
+    ##check maxram
+    if isnoneorempty(maxram) == True:
+        print("No maximum ram specified!")
+        mscexit()
+    ##check minram
+    if isnoneorempty(minram) == True:
+        print("No minimum ram specified!")
+        mscexit()
+    ##check askinstall
+    if type(askinstall) != bool:
+        print("Wrong askinstall value!")
+        mscexit()
+    ##asking user to install
+    if askinstall == True:
+        print("Start install? (yes/no)")
+        print("Server type: " + servertype)
+        print("Server version: " + serverversion)
+        print("Server build: " + build)
+        print("Install location: " + installlocation)
+        print("Server name: " + servername)
+        print("Create folder: " + str(createdir))
+        print("Maximum ram: " + maxram)
+        print("Minimum ram: " + minram)
+        install = input("?")
+        if install == "yes":
+            installer(servertype, serverversion, servername, installlocation, build, createdir, maxram, minram, False)
+            mscexit()
+        elif install == "no":
+            print("Abort")
+            mscexit()
+        else:
+            print("Not a choice!")
+            mscexit()
+    else:
+        installer(servertype, serverversion, servername, installlocation, build, createdir, maxram, minram, False)
+        mscexit()
+
+
+def listserver():
+    print("Paper:")
+    for x in database.get("versions").get("paper"):
+        print(x)
+    print("Spigot:")
+    for x in database.get("versions").get("spigot"):
+        print(x)
+    print("Craftbukkit:")
+    for x in database.get("versions").get("craftbukkit"):
+        print(x)
+    print("Vanilla:")
+    for x in database.get("versions").get("vanilla"):
+        print(x)
+    mscexit()
+
+def listbuild():
+    try:
+        version = sys.argv[3]
+        badversion = False
+        for x in database.get("versions").get("paper"):
+            if x == version:
+                badversion = False
+                break
+            else:
+                badversion = True
+        if badversion == True:
+            print("Bad version!")
+            mscexit()
+        print("Downloading buildlist...")
+        buildlistpaper = requests.get("https://api.papermc.io/v2/projects/paper/versions/" + version).json()
+        print("Listing builds...")
+        print(version + ":")
+        for x in buildlistpaper.get("builds"):
+            print("-" + str(x))
+        mscexit()
+    except IndexError:
+        print("No version specified!")
+        mscexit()
+
+def configinstall():
+    try:
+        if sys.argv[2] == "--help":
+            confighelp()
+        elif sys.argv[2] == "--createconfig":
+            createinstallconf()
+        elif sys.argv[2] == "--listserver":
+            listserver()
+        elif sys.argv[2] == "--listbuild":
+            listbuild()
+        else:
+            startinstallconfig(sys.argv[2])
+    except IndexError:
+        confighelp()
 
 ostype = getostype()
 ver = "1.0"

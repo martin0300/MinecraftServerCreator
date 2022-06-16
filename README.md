@@ -2,6 +2,7 @@
 Current beta version: V1.1\
 Script for creating minecraft servers written in python.\
 Uses getbukkit.org and Paper API for server jars.\
+Uses Spiget for plugins.\
 More features coming soon!
 
 # How to use
@@ -42,4 +43,4 @@ filename (config file)\
     }
 
 # Changes
-6/16/2022 Added plugin support.
+6/16/2022 Added partial plugin support.

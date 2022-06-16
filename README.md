@@ -1,4 +1,5 @@
-# MinecraftServerCreator
+# MinecraftServerCreator Beta
+Current beta version: V1.1\
 Script for creating minecraft servers written in python.\
 Uses getbukkit.org and Paper API for server jars.\
 More features coming soon!
@@ -39,3 +40,6 @@ filename (config file)\
       "minram": "default",  
       "askinstall": true
     }
+
+# Changes
+6/16/2022 Added plugin support.

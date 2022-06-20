@@ -1,6 +1,7 @@
 # MinecraftServerCreator
 Script for creating minecraft servers written in python.\
 Uses getbukkit.org and Paper API for server jars.\
+Uses Spiget for plugins.\
 More features coming soon!
 
 # How to use
@@ -14,6 +15,7 @@ More features coming soon!
 --createconfig (creates a config file to modify)\
 --listserver (list available server types and versions)\
 --listbuild {versionnumber} (**only works for paper!** list builds for server version)\
+--pluginmanager (starts the plugin manager)\
 filename (config file)\
 **Config file help:**\
 **Config file must be in JSON format!**\

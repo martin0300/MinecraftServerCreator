@@ -27,7 +27,8 @@ filename (config file)\
 --createdir (create directory for server with the server name)\
 --maxram (maximum ram for server **in megabytes** example 1024M (**if you don't wanna change it use default**)\
 --minram (minimum ram for server **in megabytes** example 512M (**if you don't wanna change it use default**)\
---askinstall (ask user before installing server)
+--askinstall (ask user before installing server)\
+--pluginlist (plugin list to install from (leave it at null to not use a list))
 # Config file example
 
     {  
@@ -39,5 +40,6 @@ filename (config file)\
       "createdir": true,  
       "maxram": "default",  
       "minram": "default",  
-      "askinstall": true
+      "askinstall": true,
+      "pluginlist": null
     }

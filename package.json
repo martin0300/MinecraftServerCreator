@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/martin0300/minecraftservercreator/issues"
   },
-  "homepage": "https://github.com/martin0300/minecraftservercreator#readme"
+  "homepage": "https://github.com/martin0300/minecraftservercreator#readme",
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
+  }
 }

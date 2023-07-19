@@ -1,5 +1,7 @@
 # MinecraftServerCreator
 
+**Info: MinecraftServerCreator is being rewritten in javascript. The old python3 version will not be receiving any future updates! The rewrite will improve the code quality (hopefully) and other features. Web scraping code will be fully improved!**
+
 Script for creating minecraft servers written in python.\
 Uses getbukkit.org and Paper API for server jars.\
 Uses Spiget for plugins.\

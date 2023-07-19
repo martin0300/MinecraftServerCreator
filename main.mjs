@@ -29,6 +29,9 @@ var mainMenu = new cliMenu.Menu([
     }},
     {label: "exit", shortcut: "e", callback: function() {
         process.exit(0)
+    }},
+    {label: "create", shortcut: "c", callback: function() {
+        
     }}
 ], mainMenuPrint, function() {
     console.log(chalk.red("Not a choice!"))
@@ -38,6 +41,7 @@ var mainMenu = new cliMenu.Menu([
 function mainMenuPrint() {
     console.log(`Welcome to MinecraftServerCreator ${chalk.blue(`V${mscVersion}`)}!`)
     console.log("Choices:")
+    console.log(chalk.green(`-${chalk.underline("c")}reate`))
     console.log(chalk.green(`-${chalk.underline("a")}bout`))
     console.log(chalk.green(`-${chalk.underline("e")}xit`))
 }

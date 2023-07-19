@@ -1,4 +1,0 @@
-xmltodict
-lxml
-requests
-ll

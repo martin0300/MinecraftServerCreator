@@ -31,12 +31,12 @@ var mainMenu = new cliMenu.Menu([
         process.exit(0)
     }},
     {label: "create", shortcut: "c", callback: function() {
-        
+
     }}
 ], mainMenuPrint, function() {
     console.log(chalk.red("Not a choice!"))
     mainMenu.showMenu()
-})
+}, chalk.yellow("?"))
 
 function mainMenuPrint() {
     console.log(`Welcome to MinecraftServerCreator ${chalk.blue(`V${mscVersion}`)}!`)

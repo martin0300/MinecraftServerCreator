@@ -1,10 +1,29 @@
+/*
+    Copyright (C) 2023  Martin Magyar
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+
 const prompt = require("prompt-sync")({sigint: true})
 
 class Menu {
-    constructor(options, printMenu, userPrompt = "?") {
+    constructor(options, printMenu, errorCallback, userPrompt = "?") {
         this.options = options
         this.printMenu = printMenu
         this.userPrompt = userPrompt
+        this.errorCallback = errorCallback
         this.optionsTemplate = {
             label: "",
             shortcut: "",
@@ -17,6 +36,9 @@ class Menu {
         }
         if (typeof this.printMenu !== "function") {
             throw new Error("printMenu must be a function!")
+        }
+        if (typeof this.errorCallback !== "function") {
+            throw new Error("errorCallback must be a function!")
         }
         if (this.options.length == 0) {
             throw new Error("options can't be empty!")
@@ -44,6 +66,7 @@ class Menu {
     showMenu() {
         this.printMenu()
         var userInput = prompt(this.userPrompt)
+        var found = false
         for (var findLabel in this.options) {
             var element = this.options[findLabel]
             if (element.label == userInput || element.shortcut == userInput) {
@@ -53,8 +76,12 @@ class Menu {
                 else {
                     element.callback(userInput)
                 }
+                found = true
                 break
             }
+        }
+        if (!found) {
+            this.errorCallback()
         }
         return
     }
@@ -86,7 +113,13 @@ class FreeMenu {
     }
 }
 
+function waitForEnter() {
+    prompt("Press enter to continue!")
+    return
+}
+
 module.exports = {
     Menu,
-    FreeMenu
+    FreeMenu,
+    waitForEnter
 }

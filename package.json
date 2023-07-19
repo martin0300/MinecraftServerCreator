@@ -1,6 +1,6 @@
 {
   "name": "minecraftservercreator",
-  "version": "1.0.0-Beta",
+  "version": "2.0.0-Beta",
   "description": "A server creator for minecraft.",
   "main": "main.js",
   "scripts": {
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/martin0300/minecraftservercreator#readme",
   "dependencies": {
+    "chalk": "^5.3.0",
     "prompt-sync": "^4.2.0"
   }
 }

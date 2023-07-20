@@ -24,6 +24,7 @@ class Menu {
         this.printMenu = printMenu
         this.userPrompt = userPrompt
         this.errorCallback = errorCallback
+        this.data = {}
         this.optionsTemplate = {
             label: "",
             shortcut: "",
@@ -63,8 +64,13 @@ class Menu {
         }
     }
 
-    showMenu() {
-        this.printMenu()
+    showMenu(data = null) {
+        if (this.printMenu.length == 0) {
+            this.printMenu()
+        }
+        else {
+            this.printMenu(data)
+        }
         var userInput = prompt(this.userPrompt)
         var found = false
         for (var findLabel in this.options) {
@@ -73,8 +79,11 @@ class Menu {
                 if (element.callback.length == 0) {
                     element.callback()
                 }
-                else {
+                else if (element.callback.length == 1) {
                     element.callback(userInput)
+                }
+                else {
+                    element.callback(userInput, element.label)
                 }
                 found = true
                 break
@@ -92,6 +101,7 @@ class FreeMenu {
         this.printMenu = printMenu
         this.userPrompt = userPrompt
         this.callback = callback
+        this.data = {}
 
         //check
         if (typeof this.callback !== "function") {
@@ -113,6 +123,12 @@ class FreeMenu {
     }
 }
 
+class placeHolderMenu {
+    showMenu() {
+        return
+    }
+}
+
 function waitForEnter() {
     prompt("Press enter to continue!")
     return
@@ -121,5 +137,6 @@ function waitForEnter() {
 module.exports = {
     Menu,
     FreeMenu,
+    placeHolderMenu,
     waitForEnter
 }

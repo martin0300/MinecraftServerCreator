@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/martin0300/minecraftservercreator#readme",
   "dependencies": {
+    "axios": "^1.4.0",
     "chalk": "^5.3.0",
+    "cheerio": "^1.0.0-rc.12",
     "prompt-sync": "^4.2.0"
   }
 }

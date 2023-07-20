@@ -18,6 +18,9 @@
 import cliMenu from "./libs/cliMenu.js"
 import config, { loadConfig } from "./libs/config.js"
 import chalk from "chalk"
+import * as cheerio from 'cheerio';
+import axios from "axios"
+import fs from "fs"
 
 const mscVersion = "2.0-Beta"
 
@@ -46,10 +49,86 @@ function mainMenuPrint() {
     console.log(chalk.green(`-${chalk.underline("e")}xit`))
 }
 
+function getBukkitParser(url, versionName, versionCollector, callback) {
+    axios({
+        method: "get",
+        url: url
+    }).then(function(response) {
+        var parsedHTML = cheerio.load(response.data)
+        var downloadLinks = parsedHTML(".download-pane")
+        versionCollector[versionName] = {}
+        downloadLinks.each(function() {
+            var versionNumber = parsedHTML(this).find(".col-sm-3 h2").text()
+            var downloadLink = parsedHTML(this).find(".btn-download").attr("href")
+            versionCollector[versionName][versionNumber] = downloadLink
+        })
+        callback()
+    })
+}
+
+function getBukkitDownloadParser(url, callback) {
+    axios({
+        method: "get",
+        url: url
+    }).then(function(response) {
+        var parsedHTML = cheerio.load(response.data)
+        var downloadLink = parsedHTML(".well h2 a").attr("href")
+        callback(downloadLink)
+    })
+}
+
+function fetchMCJars(callback) {
+    console.log("Downloading database...")
+    versionCollectorVars.versionLocationsKeys = Object.keys(versionLocations.nonapi)
+    versionCollectorVars.doneFunction = callback
+    var versionName = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
+    var url = versionLocations.nonapi[versionName]
+    getBukkitParser(url, versionName, versions, versionCollectorVars.callbackFunction)
+}
+
 function init() {
     config.initConfig(true)
 }
 
 init()
 var configFile = loadConfig(true, {})
-mainMenu.showMenu()
+
+//async sux
+var versionCollectorVars = {
+    versionLocationsKeys: [],
+    versionLocationsIndex: 0,
+    callbackFunction: function() {
+        versionCollectorVars.versionLocationsIndex++
+        if (versionCollectorVars.versionLocationsIndex != versionCollectorVars.versionLocationsKeys.length) {
+            var versionName = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
+            var url = versionLocations.nonapi[versionName]
+            getBukkitParser(url, versionName, versions, versionCollectorVars.callbackFunction)
+        }
+        else {
+            versionCollectorVars.doneFunction()
+        }
+    },
+    doneFunction: function() {}
+}
+
+/*
+nonapi links will get parsed by getbukkit parser
+api will get parsed using the specified api
+*/
+var versionLocations = {
+    nonapi: {
+        craftbukkit: "https://getbukkit.org/download/craftbukkit",
+        vanilla: "https://getbukkit.org/download/vanilla",
+        spigot: "https://getbukkit.org/download/spigot",
+    },
+    api: {
+        paper: "paperapi"
+    }
+}
+
+//parsed versions
+var versions = {}
+
+fetchMCJars(function() {
+    mainMenu.showMenu()
+})

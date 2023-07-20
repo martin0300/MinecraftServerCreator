@@ -179,20 +179,7 @@ function fetchAPIMCJars(callback) {
         if (versionCollectorVars.versionLocationsIndex != versionCollectorVars.versionLocationsKeys.length) {
             var version = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
             var method = versionLocations.api[version].method
-            switch (method) {
-                case "paperapi":
-                    axios({
-                        method: "get",
-                        url: `https://api.papermc.io/v2/projects/${version}`
-                    }).then(function(response) {
-                        versions[version] = {}
-                        for (var versionIndex in response.data.versions) {
-                            var versionNumber = response.data.versions[versionIndex]
-                            versions[version][versionNumber] = method
-                        }
-                        versionCollectorVars.callbackFunction()
-                    })
-            }
+            apis[method].getVersions(version, versions, versionCollectorVars.callbackFunction)
         }
         else {
             versionCollectorVars.doneFunction()
@@ -255,6 +242,31 @@ var versionLocations = {
             shortcut: "p",
             displayName: `${chalk.underline("p")}aper`,
             method: "paperapi"
+        }
+    }
+}
+
+var apis = {
+    paperapi: {
+        buildlist: true,
+        getVersions: function(version, versionCollector, callback) {
+            axios({
+                method: "get",
+                url: `https://api.papermc.io/v2/projects/${version}`
+            }).then(function(response) {
+                versionCollector[version] = {}
+                for (var versionIndex in response.data.versions) {
+                    var versionNumber = response.data.versions[versionIndex]
+                    versionCollector[version][versionNumber] = "paperapi"
+                }
+                callback()
+            })
+        },
+        getBuildlist: function(version) {
+
+        },
+        downloadJar: function(version, serverVersion) {
+
         }
     }
 }

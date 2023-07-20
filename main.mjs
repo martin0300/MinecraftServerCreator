@@ -27,18 +27,143 @@ const mscVersion = "2.0-Beta"
 //replaced using function setupCreateMenu()
 var createMenu = new cliMenu.placeHolderMenu()
 
-var versionChooser = new cliMenu.FreeMenu(function(input) {
-    console.log(input)
-}, printVersions)
+var serverInfoMenu = new cliMenu.FreeMenu(serverInfoCallback, printServerInfo, chalk.yellow("#"), {
+    pageIndex: 0
+})
 
-function printVersions() {
-    console.log("Choose server version:")
-    console.log("Choices:")
-    var serverType = versionChooser.data.version
-    for (var version in versions[serverType]) {
-        console.log(chalk.green(`-${version}`))
+function printServerInfo() {
+    console.log(serverInfoMenu.data.pageIndex)
+    switch (serverInfoMenu.data.pageIndex) {
+        case 0:
+            console.log("Choose server version:")
+            console.log("Choices:")
+            var serverType = serverInfoMenu.data.version
+            for (var version in versions[serverType]) {
+                console.log(chalk.green(`-${version}`))
+            }
+            console.log(chalk.magenta("-back"))
+            console.log(chalk.magenta("-menu"))
+            break
+        case 1:
+            var yesno = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
+            console.log(`Download latest build? ${chalk.green(yesno)}`)
+            serverInfoMenu.userPrompt = chalk.yellow("?")
+            break
+        case "1a":
+            console.log("Choose build:")
+            console.log("Choices:")
+            for (var build in serverInfoMenu.data.buildlist) {
+                console.log(chalk.green(`-${serverInfoMenu.data.buildlist[build]}`))
+            }
+            console.log(chalk.magenta("-back"))
+            console.log(chalk.magenta("-menu"))
+            break
+        case 2:
+            console.log("guess no buildlist")
+            break
     }
-    console.log(chalk.green("-back"))
+}
+
+function serverInfoCallback(input) {
+    switch (serverInfoMenu.data.pageIndex) {
+        case 0:
+            switch (input) {
+                case "back":
+                    createMenu.showMenu()
+                    break
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                default:
+                    var found = false
+                    for (var version in versions[serverInfoMenu.data.version]) {
+                        if (input == version) {
+                            found = true
+                            break
+                        }
+                    } 
+                    if (!found) {
+                        console.log(chalk.red("Not a choice!"))
+                        serverInfoMenu.showMenu()
+                    }
+                    else {
+                        serverInfoMenu.data.pageIndex++
+                        serverInfoMenu.data.serverVersion = input
+
+                        var found = false
+                        for (var api in apis) {
+                            if (versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion] == api) {
+                                found = true
+                                break
+                            }
+                        }
+                        if (found) {
+                            serverInfoMenu.data.usingAPI = true
+                            serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion]
+                            if (!apis[serverInfoMenu.data.api].buildlist) {
+                                serverInfoMenu.data.pageIndex++
+                            }
+                            else {
+                                apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                    serverInfoMenu.data.buildlist = response
+                                    serverInfoMenu.showMenu()
+                                })
+                            }
+                        }
+                        else {
+                            serverInfoMenu.data.usingAPI = false
+                            serverInfoMenu.data.pageIndex++
+                            serverInfoMenu.showMenu()
+                        }
+                    }
+                    break
+            }
+            break
+        case 1:
+            switch (input) {
+                case "yes":
+                    serverInfoMenu.data.buildVersion = "latest"
+                    serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.showMenu()
+                    break
+                case "y":
+                    serverInfoMenu.data.buildVersion = "latest"
+                    serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.showMenu()
+                    break
+                case "no":
+                    serverInfoMenu.data.pageIndex = "1a"
+                    serverInfoMenu.showMenu()
+                    break
+                case "n":
+                    serverInfoMenu.data.pageIndex = "1a"
+                    serverInfoMenu.showMenu()
+                    break
+                case "back":
+                    createMenu.showMenu()
+                    break
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
+                    break
+            }
+            break
+        case "1a":
+            switch (input) {
+                case "back":
+                    serverInfoMenu.data.pageIndex = 1
+                    serverInfoMenu.showMenu()
+                case "menu":
+                    mainMenu.showMenu()
+                default:
+                    console.log("ok")
+                    break
+            }
+            break
+    }
 }
 
 var mainMenu = new cliMenu.Menu([
@@ -129,8 +254,9 @@ function setupCreateMenu() {
             label: version,
             shortcut: versionLocations.nonapi[version].shortcut,
             callback: function(userInput, versionName) {
-                versionChooser.data.version = versionName
-                versionChooser.showMenu()
+                serverInfoMenu.data.pageIndex = 0
+                serverInfoMenu.data.version = versionName
+                serverInfoMenu.showMenu()
             }
         }
         createMenuOptions.push(newOption)
@@ -140,8 +266,9 @@ function setupCreateMenu() {
             label: version,
             shortcut: versionLocations.api[version].shortcut,
             callback: function(userInput, versionName) {
-                versionChooser.data.version = versionName
-                versionChooser.showMenu()
+                serverInfoMenu.data.pageIndex = 0
+                serverInfoMenu.data.version = versionName
+                serverInfoMenu.showMenu()
             }
         }
         createMenuOptions.push(newOption)
@@ -149,7 +276,7 @@ function setupCreateMenu() {
     createMenu = new cliMenu.Menu(createMenuOptions, printCreateMenu, function() {
         console.log(chalk.red("Not a choice!"))
         createMenu.showMenu()
-    })
+    }, chalk.yellow("?"))
     return
 }
 
@@ -262,8 +389,13 @@ var apis = {
                 callback()
             })
         },
-        getBuildlist: function(version) {
-
+        getBuildlist: function(version, serverVersion, callback) {
+            axios({
+                method: "get",
+                url: `https://api.papermc.io/v2/projects/${version}/versions/${serverVersion}`
+            }).then(function(response) {
+                callback(response.data.builds)
+            })
         },
         downloadJar: function(version, serverVersion) {
 

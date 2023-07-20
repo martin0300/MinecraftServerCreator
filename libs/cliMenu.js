@@ -19,7 +19,7 @@
 const prompt = require("prompt-sync")({sigint: true})
 
 class Menu {
-    constructor(options, printMenu, errorCallback, userPrompt = "?") {
+    constructor(options, printMenu, errorCallback, userPrompt = "?", onCreation = function() {}) {
         this.options = options
         this.printMenu = printMenu
         this.userPrompt = userPrompt
@@ -62,6 +62,7 @@ class Menu {
                 }
             }
         }
+        onCreation()
     }
 
     showMenu(data = null) {
@@ -97,11 +98,11 @@ class Menu {
 }
 
 class FreeMenu {
-    constructor(callback, printMenu, userPrompt = "?") {
+    constructor(callback, printMenu, userPrompt = "?", data = {}, onCreation = function() {}) {
         this.printMenu = printMenu
         this.userPrompt = userPrompt
         this.callback = callback
-        this.data = {}
+        this.data = data
 
         //check
         if (typeof this.callback !== "function") {
@@ -113,6 +114,7 @@ class FreeMenu {
         if (this.callback.length == 0) {
             throw new Error("callback doesn't have args!")
         }
+        onCreation()
     }
 
     showMenu() {

@@ -1,2 +1,4 @@
 node_modules/
+backup/
 config.json
+versions.json

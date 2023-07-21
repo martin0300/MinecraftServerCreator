@@ -55,6 +55,7 @@ function printServerInfo() {
             for (var build in serverInfoMenu.data.buildlist) {
                 console.log(chalk.green(`-${serverInfoMenu.data.buildlist[build]}`))
             }
+            console.log(chalk.magenta("-latest"))
             console.log(chalk.magenta("-back"))
             console.log(chalk.magenta("-menu"))
             break
@@ -92,14 +93,14 @@ function serverInfoCallback(input) {
 
                         var found = false
                         for (var api in apis) {
-                            if (versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion] == api) {
+                            if (versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method == api) {
                                 found = true
                                 break
                             }
                         }
                         if (found) {
                             serverInfoMenu.data.usingAPI = true
-                            serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion]
+                            serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method
                             if (!apis[serverInfoMenu.data.api].buildlist) {
                                 serverInfoMenu.data.pageIndex++
                             }
@@ -158,8 +159,27 @@ function serverInfoCallback(input) {
                     serverInfoMenu.showMenu()
                 case "menu":
                     mainMenu.showMenu()
+                case "latest":
+                    serverInfoMenu.data.buildVersion = "latest"
+                    serverInfoMenu.data.pageIndex = 2
+                    serverInfoMenu.showMenu()
                 default:
-                    console.log("ok")
+                    var found = false
+                    for (var build in serverInfoMenu.data.buildlist) {
+                        if (input == serverInfoMenu.data.buildlist[build]) {
+                            found = true
+                            break
+                        }
+                    }
+                    if (found) {
+                        serverInfoMenu.data.buildVersion = input
+                        serverInfoMenu.data.pageIndex = 2
+                        serverInfoMenu.showMenu()
+                    }
+                    else {
+                        console.log(chalk.red("Not a choice!"))
+                        serverInfoMenu.showMenu()
+                    }
                     break
             }
             break
@@ -191,24 +211,6 @@ function mainMenuPrint() {
     console.log(chalk.green(`-${chalk.underline("e")}xit`))
 }
 
-//parses download list for version and download page links
-function getBukkitParser(url, versionName, versionCollector, callback) {
-    axios({
-        method: "get",
-        url: url
-    }).then(function(response) {
-        var parsedHTML = cheerio.load(response.data)
-        var downloadLinks = parsedHTML(".download-pane")
-        versionCollector[versionName] = {}
-        downloadLinks.each(function() {
-            var versionNumber = parsedHTML(this).find(".col-sm-3 h2").text()
-            var downloadLink = parsedHTML(this).find(".btn-download").attr("href")
-            versionCollector[versionName][versionNumber] = downloadLink
-        })
-        callback()
-    })
-}
-
 //parses download pages for server jar download links
 function getBukkitDownloadParser(url, callback) {
     axios({
@@ -219,22 +221,6 @@ function getBukkitDownloadParser(url, callback) {
         var downloadLink = parsedHTML(".well h2 a").attr("href")
         callback(downloadLink)
     })
-}
-
-//start fetching
-function fetchNonAPIMCJars(callback) {
-    console.log("Downloading database...")
-    versionCollectorVars.versionLocationsKeys = Object.keys(versionLocations.nonapi)
-    versionCollectorVars.doneFunction = callback
-    var versionName = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
-    var url = versionLocations.nonapi[versionName].url
-    try {
-        getBukkitParser(url, versionName, versions, versionCollectorVars.callbackFunction)
-    }
-    catch {
-        console.log("Failed to download database! Please try again! (getbukkit rate limit)")
-        process.exit(2)
-    }
 }
 
 function init() {
@@ -249,22 +235,10 @@ function setupCreateMenu() {
             mainMenu.showMenu()
         }
     }]
-    for (var version in versionLocations.nonapi) {
+    for (var version in versionLocations) {
         var newOption = {
             label: version,
-            shortcut: versionLocations.nonapi[version].shortcut,
-            callback: function(userInput, versionName) {
-                serverInfoMenu.data.pageIndex = 0
-                serverInfoMenu.data.version = versionName
-                serverInfoMenu.showMenu()
-            }
-        }
-        createMenuOptions.push(newOption)
-    }
-    for (var version in versionLocations.api) {
-        var newOption = {
-            label: version,
-            shortcut: versionLocations.api[version].shortcut,
+            shortcut: versionLocations[version].shortcut,
             callback: function(userInput, versionName) {
                 serverInfoMenu.data.pageIndex = 0
                 serverInfoMenu.data.version = versionName
@@ -283,11 +257,8 @@ function setupCreateMenu() {
 function printCreateMenu() {
     console.log("Choose server type:")
     console.log("Choices:")
-    for (var version in versionLocations.nonapi) {
-        console.log(chalk.green(`-${versionLocations.nonapi[version].displayName}`))
-    }
-    for (var version in versionLocations.api) {
-        console.log(chalk.green(`-${versionLocations.api[version].displayName}`))
+    for (var version in versionLocations) {
+        console.log(chalk.green(`-${versionLocations[version].displayName}`))
     }
     console.log(chalk.green(`-${chalk.underline("b")}ack`))
     return
@@ -296,7 +267,8 @@ function printCreateMenu() {
 //uses apis to fetch server jars
 //apis can be easily added to the switch (i think)
 function fetchAPIMCJars(callback) {
-    versionCollectorVars.versionLocationsKeys = Object.keys(versionLocations.api)
+    console.log("Downloading database...")
+    versionCollectorVars.versionLocationsKeys = Object.keys(versionLocations)
     versionCollectorVars.doneFunction = callback
     versionCollectorVars.versionLocationsIndex = 0
     versionCollectorVars.callbackFunction = function(start = false) {
@@ -305,7 +277,7 @@ function fetchAPIMCJars(callback) {
         }
         if (versionCollectorVars.versionLocationsIndex != versionCollectorVars.versionLocationsKeys.length) {
             var version = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
-            var method = versionLocations.api[version].method
+            var method = versionLocations[version].method
             apis[method].getVersions(version, versions, versionCollectorVars.callbackFunction)
         }
         else {
@@ -322,23 +294,7 @@ var configFile = loadConfig(true, {})
 var versionCollectorVars = {
     versionLocationsKeys: [],
     versionLocationsIndex: 0,
-    callbackFunction: function() {
-        versionCollectorVars.versionLocationsIndex++
-        if (versionCollectorVars.versionLocationsIndex != versionCollectorVars.versionLocationsKeys.length) {
-            var versionName = versionCollectorVars.versionLocationsKeys[versionCollectorVars.versionLocationsIndex]
-            var url = versionLocations.nonapi[versionName].url
-            try {
-                getBukkitParser(url, versionName, versions, versionCollectorVars.callbackFunction)
-            }
-            catch {
-                console.log("Failed to download database! Please try again! (getbukkit rate limit)")
-                process.exit(2)
-            }
-        }
-        else {
-            versionCollectorVars.doneFunction()
-        }
-    },
+    callbackFunction: function() {},
     doneFunction: function() {}
 }
 
@@ -347,29 +303,25 @@ nonapi links will get parsed by getbukkit parser
 api will get parsed using the specified api
 */
 var versionLocations = {
-    nonapi: {
-        craftbukkit: {
-            shortcut: "c",
-            displayName: `${chalk.underline("c")}raftbukkit`,
-            url: "https://getbukkit.org/download/craftbukkit",
-        },
-        vanilla: {
-            shortcut: "v",
-            displayName: `${chalk.underline("v")}anilla`,
-            url: "https://getbukkit.org/download/vanilla",
-        },
-        spigot: {
-            shortcut: "s",
-            displayName: `${chalk.underline("s")}pigot`,
-            url: "https://getbukkit.org/download/spigot",
-        }
+    craftbukkit: {
+        shortcut: "c",
+        displayName: `${chalk.underline("c")}raftbukkit`,
+        method: "getbukkit"
     },
-    api: {
-        paper: {
-            shortcut: "p",
-            displayName: `${chalk.underline("p")}aper`,
-            method: "paperapi"
-        }
+    vanilla: {
+        shortcut: "v",
+        displayName: `${chalk.underline("v")}anilla`,
+        method: "getbukkit"
+    },
+    spigot: {
+        shortcut: "s",
+        displayName: `${chalk.underline("s")}pigot`,
+        method: "getbukkit"
+    },
+    paper: {
+        shortcut: "p",
+        displayName: `${chalk.underline("p")}aper`,
+        method: "paperapi"
     }
 }
 
@@ -384,7 +336,9 @@ var apis = {
                 versionCollector[version] = {}
                 for (var versionIndex in response.data.versions) {
                     var versionNumber = response.data.versions[versionIndex]
-                    versionCollector[version][versionNumber] = "paperapi"
+                    versionCollector[version][versionNumber] = {
+                        method: "paperapi"
+                    }
                 }
                 callback()
             })
@@ -400,15 +354,49 @@ var apis = {
         downloadJar: function(version, serverVersion) {
 
         }
+    },
+    getbukkit: {
+        buildlist: false,
+        getVersions: function(version, versionCollector, callback) {
+            axios({
+                method: "get",
+                url: `https://getbukkit.org/download/${version}`
+            }).then(function(response) {
+                var parsedHTML = cheerio.load(response.data)
+                var downloadLinks = parsedHTML(".download-pane")
+                versionCollector[version] = {}
+                downloadLinks.each(function() {
+                    var versionNumber = parsedHTML(this).find(".col-sm-3 h2").text()
+                    var downloadLink = parsedHTML(this).find(".btn-download").attr("href")
+                    versionCollector[version][versionNumber] = {
+                        method: "getbukkit",
+                        optdata: {
+                            url: downloadLink
+                        }
+                    }
+                })
+                callback()
+            })
+        },
+        //TODO: finish this
+        downloadJar: function(version, serverVersion) {
+            axios({
+                method: "get",
+                url: versions[version][serverVersion].optdata.url
+            }).then(function(response) {
+                var parsedHTML = cheerio.load(response.data)
+                var downloadLink = parsedHTML(".well h2 a").attr("href")
+                callback(downloadLink)
+            })
+        }
     }
 }
 
 //parsed versions
 var versions = {}
 
-fetchNonAPIMCJars(function() {
-    fetchAPIMCJars(function() {
-        setupCreateMenu()
-        mainMenu.showMenu()
-    })
+fetchAPIMCJars(function() {
+    fs.writeFileSync("versions.json", JSON.stringify(versions))
+    setupCreateMenu()
+    mainMenu.showMenu()
 })

@@ -82,7 +82,9 @@ function printServerInfo() {
             console.log(`Server build: ${chalk.magenta(serverInfoMenu.data.buildVersion)}`)
             console.log(`Installation location: ${chalk.magenta(serverInfoMenu.data.installDir)}`)
             console.log(`Server name: ${chalk.magenta(serverInfoMenu.data.serverName)}`)
-            console.log(`Server name: ${chalk.magenta(serverInfoMenu.data.serverName)}`)
+            console.log(`Create directory: ${chalk.magenta(serverInfoMenu.data.createDir ? "yes" : "no")}`)
+            console.log(`Minimum ram: ${chalk.magenta(serverInfoMenu.data.minRAM == "" ? "default": serverInfoMenu.data.minRAM)}`)
+            console.log(`Maximum ram: ${chalk.magenta(serverInfoMenu.data.maxRAM == "" ? "default": serverInfoMenu.data.maxRAM)}`)
             break
     }
 }

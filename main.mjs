@@ -65,6 +65,12 @@ function printServerInfo() {
         case 3:
             console.log("Enter server name:")
             break
+        case 4:
+            console.log("Enter minimum amount ram for server: (default is in MB add GB to end if you want GB)")
+            break
+        case "4a":
+            console.log("Enter maximum amount ram for server: (default is in MB add GB to end if you want GB)")
+            break
     }
 }
 
@@ -221,7 +227,9 @@ function serverInfoCallback(input) {
         case 3:
             if (!isnullorempty(input)) {
                 serverInfoMenu.data.serverName = input
-                console.log(serverInfoMenu.data)
+                serverInfoMenu.data.pageIndex++
+                serverInfoMenu.userPrompt = chalk.yellow("#")
+                serverInfoMenu.showMenu()
             }
             else {
                 console.log(chalk.red("There is nothing entered!"))
@@ -230,6 +238,14 @@ function serverInfoCallback(input) {
                 serverInfoMenu.showMenu()
             }
             break
+        case 4:
+            var maxram
+            if ("\d+(\.\d+)?[gG][bB]?".match(input)) {
+                maxram = input.replace("gb", "g")
+            }
+            else {
+                
+            }
     }
 }
 

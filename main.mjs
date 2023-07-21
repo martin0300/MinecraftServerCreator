@@ -60,7 +60,10 @@ function printServerInfo() {
             console.log(chalk.magenta("-menu"))
             break
         case 2:
-            console.log("guess no buildlist")
+            console.log("Choose install location:")
+            break
+        case 3:
+            console.log("Enter server name:")
             break
     }
 }
@@ -90,31 +93,21 @@ function serverInfoCallback(input) {
                     else {
                         serverInfoMenu.data.pageIndex++
                         serverInfoMenu.data.serverVersion = input
+                        serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method
 
-                        var found = false
-                        for (var api in apis) {
-                            if (versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method == api) {
-                                found = true
-                                break
-                            }
-                        }
-                        if (found) {
-                            serverInfoMenu.data.usingAPI = true
-                            serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method
-                            if (!apis[serverInfoMenu.data.api].buildlist) {
-                                serverInfoMenu.data.pageIndex++
-                            }
-                            else {
-                                apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
-                                    serverInfoMenu.data.buildlist = response
-                                    serverInfoMenu.showMenu()
-                                })
-                            }
+                        if (!apis[serverInfoMenu.data.api].buildlist) {
+                            console.log("no b")
+                            serverInfoMenu.data.pageIndex++
+                            serverInfoMenu.userPrompt = chalk.yellow("?")
+                            serverInfoMenu.showMenu()
                         }
                         else {
-                            serverInfoMenu.data.usingAPI = false
-                            serverInfoMenu.data.pageIndex++
-                            serverInfoMenu.showMenu()
+                            console.log("yes b")
+                            apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                serverInfoMenu.data.buildlist = response
+                                serverInfoMenu.userPrompt = chalk.yellow("?")
+                                serverInfoMenu.showMenu()
+                            })
                         }
                     }
                     break
@@ -125,23 +118,29 @@ function serverInfoCallback(input) {
                 case "yes":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "y":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "no":
                     serverInfoMenu.data.pageIndex = "1a"
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "n":
                     serverInfoMenu.data.pageIndex = "1a"
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "back":
-                    createMenu.showMenu()
+                    serverInfoMenu.data.pageIndex--
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
                     break
                 case "menu":
                     mainMenu.showMenu()
@@ -156,13 +155,18 @@ function serverInfoCallback(input) {
             switch (input) {
                 case "back":
                     serverInfoMenu.data.pageIndex = 1
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
+                    break
                 case "menu":
                     mainMenu.showMenu()
+                    break
                 case "latest":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex = 2
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
+                    break
                 default:
                     var found = false
                     for (var build in serverInfoMenu.data.buildlist) {
@@ -174,6 +178,7 @@ function serverInfoCallback(input) {
                     if (found) {
                         serverInfoMenu.data.buildVersion = input
                         serverInfoMenu.data.pageIndex = 2
+                        serverInfoMenu.userPrompt = chalk.yellow("?")
                         serverInfoMenu.showMenu()
                     }
                     else {
@@ -183,7 +188,65 @@ function serverInfoCallback(input) {
                     break
             }
             break
+        case 2:
+            switch (input) {
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                case "back":
+                    if (apis[serverInfoMenu.data.api].buildlist) {
+                        serverInfoMenu.data.pageIndex--
+                        serverInfoMenu.userPrompt = chalk.yellow("?")
+                    }
+                    else {
+                        serverInfoMenu.data.pageIndex -= 2
+                        serverInfoMenu.userPrompt = chalk.yellow("#")
+                    }
+                    serverInfoMenu.showMenu()
+                    break
+                default:
+                    if (fs.existsSync(input)) {
+                        serverInfoMenu.data.pageIndex++
+                        serverInfoMenu.data.installDir = input
+                        serverInfoMenu.userPrompt = chalk.yellow("?")
+                        serverInfoMenu.showMenu()
+                    } 
+                    else {
+                        console.log(chalk.red("Invalid directory!"))
+                        serverInfoMenu.showMenu()
+                    }
+                    break
+            }
+            break
+        case 3:
+            if (!isnullorempty(input)) {
+                serverInfoMenu.data.serverName = input
+                console.log(serverInfoMenu.data)
+            }
+            else {
+                console.log(chalk.red("There is nothing entered!"))
+                serverInfoMenu.data.pageIndex--
+                serverInfoMenu.userPrompt = chalk.yellow("?")
+                serverInfoMenu.showMenu()
+            }
+            break
     }
+}
+
+function isnullorempty(string) {
+	if (string == null) {
+		return true;
+	}
+	var string2 = string.split(" ").join("");
+	if (string2.length == 0) {
+		return true;
+	} else {
+		if (!string2) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
 
 var mainMenu = new cliMenu.Menu([
@@ -299,7 +362,6 @@ var versionCollectorVars = {
 }
 
 /*
-nonapi links will get parsed by getbukkit parser
 api will get parsed using the specified api
 */
 var versionLocations = {
@@ -396,7 +458,6 @@ var apis = {
 var versions = {}
 
 fetchAPIMCJars(function() {
-    fs.writeFileSync("versions.json", JSON.stringify(versions))
     setupCreateMenu()
     mainMenu.showMenu()
 })

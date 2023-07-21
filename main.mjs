@@ -32,7 +32,6 @@ var serverInfoMenu = new cliMenu.FreeMenu(serverInfoCallback, printServerInfo, c
 })
 
 function printServerInfo() {
-    console.log(serverInfoMenu.data.pageIndex)
     switch (serverInfoMenu.data.pageIndex) {
         case 0:
             console.log("Choose server version:")
@@ -65,11 +64,25 @@ function printServerInfo() {
         case 3:
             console.log("Enter server name:")
             break
+        case "3a":
+            var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
+            console.log(`Do you want to create a directory with this name? ${chalk.green(choices)}`)
+            break
         case 4:
-            console.log("Enter minimum amount ram for server: (default is in MB add GB to end if you want GB)")
+            console.log(`Enter minimum amount of ram for server: (${chalk.green("MB")} or ${chalk.green("GB")} (defaults to ${chalk.green("MB")}) or leave empty)`)
             break
         case "4a":
-            console.log("Enter maximum amount ram for server: (default is in MB add GB to end if you want GB)")
+            console.log(`Enter maximum amount of ram for server: (${chalk.green("MB")} or ${chalk.green("GB")} (defaults to ${chalk.green("MB")}) or leave empty)`)
+            break
+        case 5:
+            var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack/${chalk.underline("m")}enu)`
+            console.log(`Everything is correct? ${chalk.green(choices)}`)
+            console.log(`Server type: ${chalk.magenta(serverInfoMenu.data.version)}`)
+            console.log(`Server version: ${chalk.magenta(serverInfoMenu.data.serverVersion)}`)
+            console.log(`Server build: ${chalk.magenta(serverInfoMenu.data.buildVersion)}`)
+            console.log(`Installation location: ${chalk.magenta(serverInfoMenu.data.installDir)}`)
+            console.log(`Server name: ${chalk.magenta(serverInfoMenu.data.serverName)}`)
+            console.log(`Server name: ${chalk.magenta(serverInfoMenu.data.serverName)}`)
             break
     }
 }
@@ -102,13 +115,11 @@ function serverInfoCallback(input) {
                         serverInfoMenu.data.api = versions[serverInfoMenu.data.version][serverInfoMenu.data.serverVersion].method
 
                         if (!apis[serverInfoMenu.data.api].buildlist) {
-                            console.log("no b")
                             serverInfoMenu.data.pageIndex++
                             serverInfoMenu.userPrompt = chalk.yellow("?")
                             serverInfoMenu.showMenu()
                         }
                         else {
-                            console.log("yes b")
                             apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
                                 serverInfoMenu.data.buildlist = response
                                 serverInfoMenu.userPrompt = chalk.yellow("?")
@@ -227,8 +238,8 @@ function serverInfoCallback(input) {
         case 3:
             if (!isnullorempty(input)) {
                 serverInfoMenu.data.serverName = input
-                serverInfoMenu.data.pageIndex++
-                serverInfoMenu.userPrompt = chalk.yellow("#")
+                serverInfoMenu.data.pageIndex = "3a"
+                serverInfoMenu.userPrompt = chalk.yellow("?")
                 serverInfoMenu.showMenu()
             }
             else {
@@ -238,15 +249,158 @@ function serverInfoCallback(input) {
                 serverInfoMenu.showMenu()
             }
             break
+        case "3a":
+            switch (input) {
+                case "y":
+                    serverInfoMenu.data.createDir = true
+                    serverInfoMenu.data.pageIndex = 4
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "yes":
+                    serverInfoMenu.data.createDir = true
+                    serverInfoMenu.data.pageIndex = 4
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "n":
+                    serverInfoMenu.data.createDir = false
+                    serverInfoMenu.data.pageIndex = 4
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "no":
+                    serverInfoMenu.data.createDir = false
+                    serverInfoMenu.data.pageIndex = 4
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "back":
+                    serverInfoMenu.data.pageIndex = 3
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
+                    serverInfoMenu.showMenu()
+                    break
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
+                    break
+            }
+            break
         case 4:
-            var maxram
-            if ("\d+(\.\d+)?[gG][bB]?".match(input)) {
-                maxram = input.replace("gb", "g")
+            switch (input) {
+                case "back":
+                    serverInfoMenu.data.pageIndex = "3a"
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
+                    serverInfoMenu.showMenu()
+                    break
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                case "":
+                    serverInfoMenu.data.maxRAM = false
+                    serverInfoMenu.data.pageIndex = "4a"
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                default:
+                    var maxram = checkRAM(input)
+                    if (maxram == false) {
+                        console.log(chalk.red("Not a number or a valid ram amount!"))
+                        serverInfoMenu.showMenu()
+                        break
+                    }
+                    else {
+                        serverInfoMenu.data.maxRAM = maxram
+                        serverInfoMenu.data.pageIndex = "4a"
+                        serverInfoMenu.userPrompt = chalk.yellow("#")
+                        serverInfoMenu.showMenu()
+                        break
+                    }
             }
-            else {
-                
+            break
+        case "4a":
+            switch (input) {
+                case "back":
+                    serverInfoMenu.data.pageIndex = 4
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                case "":
+                    serverInfoMenu.data.minRAM = false
+                    serverInfoMenu.data.pageIndex = 5
+                    serverInfoMenu.userPrompt = chalk.yellow("?")
+                    serverInfoMenu.showMenu()
+                    break
+                default:
+                    var minram = checkRAM(input)
+                    if (minram == false) {
+                        console.log(chalk.red("Not a number or a valid ram amount!"))
+                        serverInfoMenu.showMenu()
+                        break
+                    }
+                    else {
+                        serverInfoMenu.data.minRAM = minram
+                        serverInfoMenu.data.pageIndex = 5
+                        serverInfoMenu.userPrompt = chalk.yellow("?")
+                        serverInfoMenu.showMenu()
+                        break
+                    }
             }
+            break
+        case 5:
+            switch (input) {
+                case "menu":
+                    mainMenu.showMenu()
+                    break
+                case "m":
+                    mainMenu.showMenu()
+                    break
+                case "back":
+                    serverInfoMenu.data.pageIndex = "4a"
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "b":
+                    serverInfoMenu.data.pageIndex = "4a"
+                    serverInfoMenu.userPrompt = chalk.yellow("#")
+                    serverInfoMenu.showMenu()
+                    break
+                case "no":
+                    console.log("Restarting...")
+                    createMenu.showMenu()
+                    break
+                case "n":
+                    console.log("Restarting...")
+                    createMenu.showMenu()
+                    break
+            }
+            break
     }
+}
+
+function checkRAM(inputRAM) {
+    var ram
+    if (/^\d+(\.\d+)?[gG][bB]?$/.test(inputRAM)) {
+        ram = inputRAM.replace("gb", "G").replace("GB", "G").replace("gB", "G").replace("Gb", "G").replace("g", "G")
+    }
+    else if (/^\d+[mM][bB]?$/.test(inputRAM)) {
+        ram = inputRAM.replace("mb", "M").replace("MB", "M").replace("mB", "M").replace("Mb", "M").replace("m", "M")
+    }
+    else {
+        if (!isNaN(inputRAM)) {
+            ram = inputRAM + "M"
+        }
+        else {
+            return false
+        }
+    }
+    return ram
 }
 
 function isnullorempty(string) {

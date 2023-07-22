@@ -141,19 +141,12 @@ function serverInfoCallback(input) {
         case 1:
             switch (input) {
                 case "yes":
-                    serverInfoMenu.data.buildVersion = "latest"
-                    serverInfoMenu.data.pageIndex++
-                    serverInfoMenu.showMenu()
-                    break
                 case "y":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex++
                     serverInfoMenu.showMenu()
                     break
                 case "no":
-                    serverInfoMenu.data.pageIndex = "1a"
-                    serverInfoMenu.showMenu()
-                    break
                 case "n":
                     serverInfoMenu.data.pageIndex = "1a"
                     serverInfoMenu.showMenu()
@@ -247,20 +240,12 @@ function serverInfoCallback(input) {
         case "3a":
             switch (input) {
                 case "y":
-                    serverInfoMenu.data.createDir = true
-                    serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.showMenu()
-                    break
                 case "yes":
                     serverInfoMenu.data.createDir = true
                     serverInfoMenu.data.pageIndex = 4
                     serverInfoMenu.showMenu()
                     break
                 case "n":
-                    serverInfoMenu.data.createDir = false
-                    serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.showMenu()
-                    break
                 case "no":
                     serverInfoMenu.data.createDir = false
                     serverInfoMenu.data.pageIndex = 4
@@ -340,23 +325,15 @@ function serverInfoCallback(input) {
         case 5:
             switch (input) {
                 case "menu":
-                    mainMenu.showMenu()
-                    break
                 case "m":
                     mainMenu.showMenu()
                     break
                 case "back":
-                    serverInfoMenu.data.pageIndex = "4a"
-                    serverInfoMenu.showMenu()
-                    break
                 case "b":
                     serverInfoMenu.data.pageIndex = "4a"
                     serverInfoMenu.showMenu()
                     break
                 case "no":
-                    console.log("Restarting...")
-                    createMenu.showMenu()
-                    break
                 case "n":
                     console.log("Restarting...")
                     createMenu.showMenu()

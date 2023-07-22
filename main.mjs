@@ -34,6 +34,7 @@ var serverInfoMenu = new cliMenu.FreeMenu(serverInfoCallback, printServerInfo, c
 function printServerInfo() {
     switch (serverInfoMenu.data.pageIndex) {
         case 0:
+            serverInfoMenu.userPrompt = chalk.yellow("#")
             console.log("Choose server version:")
             console.log("Choices:")
             var serverType = serverInfoMenu.data.version
@@ -44,11 +45,12 @@ function printServerInfo() {
             console.log(chalk.magenta("-menu"))
             break
         case 1:
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             var yesno = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
             console.log(`Download latest build? ${chalk.green(yesno)}`)
-            serverInfoMenu.userPrompt = chalk.yellow("?")
             break
         case "1a":
+            serverInfoMenu.userPrompt = chalk.yellow("#")
             console.log("Choose build:")
             console.log("Choices:")
             for (var build in serverInfoMenu.data.buildlist) {
@@ -59,22 +61,28 @@ function printServerInfo() {
             console.log(chalk.magenta("-menu"))
             break
         case 2:
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             console.log("Choose install location:")
             break
         case 3:
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             console.log("Enter server name:")
             break
         case "3a":
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
             console.log(`Do you want to create a directory with this name? ${chalk.green(choices)}`)
             break
         case 4:
+            serverInfoMenu.userPrompt = chalk.yellow("#")
             console.log(`Enter minimum amount of ram for server: (${chalk.green("MB")} or ${chalk.green("GB")} (defaults to ${chalk.green("MB")}) or leave empty)`)
             break
         case "4a":
+            serverInfoMenu.userPrompt = chalk.yellow("#")
             console.log(`Enter maximum amount of ram for server: (${chalk.green("MB")} or ${chalk.green("GB")} (defaults to ${chalk.green("MB")}) or leave empty)`)
             break
         case 5:
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack/${chalk.underline("m")}enu)`
             console.log(`Everything is correct? ${chalk.green(choices)}`)
             console.log(`Server type: ${chalk.magenta(serverInfoMenu.data.version)}`)
@@ -118,13 +126,11 @@ function serverInfoCallback(input) {
 
                         if (!apis[serverInfoMenu.data.api].buildlist) {
                             serverInfoMenu.data.pageIndex++
-                            serverInfoMenu.userPrompt = chalk.yellow("?")
                             serverInfoMenu.showMenu()
                         }
                         else {
                             apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
                                 serverInfoMenu.data.buildlist = response
-                                serverInfoMenu.userPrompt = chalk.yellow("?")
                                 serverInfoMenu.showMenu()
                             })
                         }
@@ -137,28 +143,23 @@ function serverInfoCallback(input) {
                 case "yes":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex++
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "y":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex++
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "no":
                     serverInfoMenu.data.pageIndex = "1a"
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "n":
                     serverInfoMenu.data.pageIndex = "1a"
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "back":
                     serverInfoMenu.data.pageIndex--
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
@@ -174,7 +175,6 @@ function serverInfoCallback(input) {
             switch (input) {
                 case "back":
                     serverInfoMenu.data.pageIndex = 1
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
@@ -183,7 +183,6 @@ function serverInfoCallback(input) {
                 case "latest":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex = 2
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 default:
@@ -197,7 +196,6 @@ function serverInfoCallback(input) {
                     if (found) {
                         serverInfoMenu.data.buildVersion = input
                         serverInfoMenu.data.pageIndex = 2
-                        serverInfoMenu.userPrompt = chalk.yellow("?")
                         serverInfoMenu.showMenu()
                     }
                     else {
@@ -215,11 +213,9 @@ function serverInfoCallback(input) {
                 case "back":
                     if (apis[serverInfoMenu.data.api].buildlist) {
                         serverInfoMenu.data.pageIndex--
-                        serverInfoMenu.userPrompt = chalk.yellow("?")
                     }
                     else {
                         serverInfoMenu.data.pageIndex -= 2
-                        serverInfoMenu.userPrompt = chalk.yellow("#")
                     }
                     serverInfoMenu.showMenu()
                     break
@@ -227,7 +223,6 @@ function serverInfoCallback(input) {
                     if (fs.existsSync(input)) {
                         serverInfoMenu.data.pageIndex++
                         serverInfoMenu.data.installDir = input
-                        serverInfoMenu.userPrompt = chalk.yellow("?")
                         serverInfoMenu.showMenu()
                     } 
                     else {
@@ -241,13 +236,11 @@ function serverInfoCallback(input) {
             if (!isnullorempty(input)) {
                 serverInfoMenu.data.serverName = input
                 serverInfoMenu.data.pageIndex = "3a"
-                serverInfoMenu.userPrompt = chalk.yellow("?")
                 serverInfoMenu.showMenu()
             }
             else {
                 console.log(chalk.red("There is nothing entered!"))
                 serverInfoMenu.data.pageIndex--
-                serverInfoMenu.userPrompt = chalk.yellow("?")
                 serverInfoMenu.showMenu()
             }
             break
@@ -256,30 +249,25 @@ function serverInfoCallback(input) {
                 case "y":
                     serverInfoMenu.data.createDir = true
                     serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "yes":
                     serverInfoMenu.data.createDir = true
                     serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "n":
                     serverInfoMenu.data.createDir = false
                     serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "no":
                     serverInfoMenu.data.createDir = false
                     serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "back":
                     serverInfoMenu.data.pageIndex = 3
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
@@ -295,7 +283,6 @@ function serverInfoCallback(input) {
             switch (input) {
                 case "back":
                     serverInfoMenu.data.pageIndex = "3a"
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
@@ -304,7 +291,6 @@ function serverInfoCallback(input) {
                 case "":
                     serverInfoMenu.data.maxRAM = false
                     serverInfoMenu.data.pageIndex = "4a"
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 default:
@@ -317,7 +303,6 @@ function serverInfoCallback(input) {
                     else {
                         serverInfoMenu.data.maxRAM = maxram
                         serverInfoMenu.data.pageIndex = "4a"
-                        serverInfoMenu.userPrompt = chalk.yellow("#")
                         serverInfoMenu.showMenu()
                         break
                     }
@@ -327,7 +312,6 @@ function serverInfoCallback(input) {
             switch (input) {
                 case "back":
                     serverInfoMenu.data.pageIndex = 4
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
@@ -336,7 +320,6 @@ function serverInfoCallback(input) {
                 case "":
                     serverInfoMenu.data.minRAM = false
                     serverInfoMenu.data.pageIndex = 5
-                    serverInfoMenu.userPrompt = chalk.yellow("?")
                     serverInfoMenu.showMenu()
                     break
                 default:
@@ -349,7 +332,6 @@ function serverInfoCallback(input) {
                     else {
                         serverInfoMenu.data.minRAM = minram
                         serverInfoMenu.data.pageIndex = 5
-                        serverInfoMenu.userPrompt = chalk.yellow("?")
                         serverInfoMenu.showMenu()
                         break
                     }
@@ -365,12 +347,10 @@ function serverInfoCallback(input) {
                     break
                 case "back":
                     serverInfoMenu.data.pageIndex = "4a"
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "b":
                     serverInfoMenu.data.pageIndex = "4a"
-                    serverInfoMenu.userPrompt = chalk.yellow("#")
                     serverInfoMenu.showMenu()
                     break
                 case "no":

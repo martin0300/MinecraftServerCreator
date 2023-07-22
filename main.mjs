@@ -21,8 +21,13 @@ import chalk from "chalk"
 import * as cheerio from 'cheerio';
 import axios from "axios"
 import fs from "fs"
+import http from "http"
+import https from "https"
+import path from "path";
+import os from "os"
 
 const mscVersion = "2.0-Beta"
+var ostype = os.platform()
 
 //replaced using function setupCreateMenu()
 var createMenu = new cliMenu.placeHolderMenu()
@@ -338,6 +343,20 @@ function serverInfoCallback(input) {
                     console.log("Restarting...")
                     createMenu.showMenu()
                     break
+                case "yes":
+                case "y":
+                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
+                        if (!finish) {
+                            console.log(chalk.red("Download failed! Please try again!"))
+                            cliMenu.waitForEnter()
+                            mainMenu.showMenu()
+                        }
+                        else {
+                            cliMenu.waitForEnter()
+                            mainMenu.showMenu()
+                        }
+                    }, serverInfoMenu.data.buildVersion, serverInfoMenu.data.buildlist ? serverInfoMenu.data.buildlist : null)
+                    break
             }
             break
     }
@@ -376,6 +395,71 @@ function isnullorempty(string) {
 			return false;
 		}
 	}
+}
+
+function installer(version, serverVersion, installDir, createDir, serverName, minRAM, maxRAM, callback, build = null, buildlist = null) {
+    var installStage2 = function(finish) {
+        if (!finish) {
+            callback(false)
+            return
+        }
+        else {
+            console.log(chalk.green("Downloaded server jar!"))
+        }
+        console.log("Creating start script...")
+        var startScript = `${startScriptTemplates[ostype].template}java${minRAM == "" ? "" : ` -Xms${minRAM}`}${maxRAM == "" ? "" : ` -Xmx${maxRAM}`} -jar ${filename}${startScriptTemplates[ostype].templateEnd}`
+        var startScriptPath = path.join(workingDir, `start.${startScriptTemplates[ostype].fileextension}`)
+        fs.writeFileSync(startScriptPath, startScript)
+        console.log(chalk.green("Created start script!"))
+        if (startScriptTemplates[ostype].chmod) {
+            console.log("Changing permissions...")
+            var stats = fs.statSync(startScriptPath);
+            var currentPermissions = stats.mode;
+            var newPermissions = currentPermissions | 0o111;
+            fs.chmodSync(startScriptPath, newPermissions)
+            console.log(chalk.green("Changed permissions successfully!"))
+        }
+        console.log(chalk.green("Server created!"))
+        callback(true)
+    }
+
+    console.log("Starting installation...")
+    var api = versionLocations[version].method
+    var workingDir
+    if (createDir) {
+        console.log("Creating directory...")
+        var newDir = path.join(installDir, serverName)
+        if (!fs.existsSync(newDir)) {
+            fs.mkdirSync(newDir)
+            console.log(chalk.green("Created directory!"))
+        }
+        else {
+            console.log(chalk.yellow("Directory already exists! Continuing..."))
+        }
+        workingDir = newDir
+    }
+    else {
+        workingDir = installDir
+    }
+    console.log("Downloading server jar...")
+    var savePath
+    if (apis[api].buildlist) {
+        var buildnumber
+        if (build == "latest") {
+            buildnumber = getBiggestNumber(buildlist)
+        }
+        else {
+            buildnumber = build
+        }
+        var filename = `${version}-${serverVersion}-${buildnumber}.jar`
+        var savePath = path.join(workingDir, filename)
+        apis[api].downloadJar(version, serverVersion, savePath, installStage2, buildnumber)
+    }
+    else {
+        var filename = `${version}-${serverVersion}.jar`
+        var savePath = path.join(workingDir, filename)
+        apis[api].downloadJar(version, serverVersion, savePath, installStage2)
+    }
 }
 
 var mainMenu = new cliMenu.Menu([
@@ -479,6 +563,51 @@ function fetchAPIMCJars(callback) {
     versionCollectorVars.callbackFunction(true)
 }
 
+function downloadFile(url, savePath, callback) {
+    var file = fs.createWriteStream(savePath)
+    var protocol = url.startsWith('https') ? https : http;
+    var calledBack = false
+    var downloadRequest = protocol.get(url, function(response) {
+        response.pipe(file)
+
+        if (response.statusCode !== 200) {
+            file.close()
+            if (fs.existsSync(savePath)) {
+                fs.unlinkSync(savePath)
+            }
+            if (!calledBack) {
+                calledBack = true
+                callback(false)
+            }
+        }
+
+        file.on("finish", function() {
+            file.close()
+            callback(true)
+        })
+        file.on("error", function() {
+            file.close()
+            if (fs.existsSync(savePath)) {
+                fs.unlinkSync(savePath)
+            }
+            if (!calledBack) {
+                calledBack = true
+                callback(false)
+            }
+        })
+    })
+}
+
+function getBiggestNumber(array) {
+    var largestFound = 0
+    for (var x in array) {
+        if (array[x] > largestFound) {
+            largestFound = array[x]
+        }
+    }
+    return largestFound
+}
+
 init()
 var configFile = loadConfig(true, {})
 
@@ -494,6 +623,16 @@ var versionCollectorVars = {
 api will get parsed using the specified api
 */
 var versionLocations = {
+    /*
+    serverType: {
+        //can be used to faster access servertype from create menu
+        shortcut: "",
+        //how it appears in create menu
+        displayName: "",
+        //what api it uses to download versions/jars/buildlists (api is specified in apis)
+        method: ""
+    }
+    */
     craftbukkit: {
         shortcut: "c",
         displayName: `${chalk.underline("c")}raftbukkit`,
@@ -517,6 +656,36 @@ var versionLocations = {
 }
 
 var apis = {
+    /*
+    customapi: {
+        //specifies that api needs a buildlist to download jar
+        buildlist: true,
+        //when called gets all server versions and puts it into the provided versionCollector (Example: versionCollector[version][versionNumber] = {
+            method: customapi,
+            //put optional data here
+            optdata: {}
+        })
+        getVersions: function(version, versionCollector, callback) {
+            //version = versionLocations name
+            //versionCollector = versions object provided by installer
+            //callback = return to when done
+        },
+        //if buildlist is true, needs to return a list of numbers
+        getBuildlist: function(version, serverVersion, callback) {
+            //version = versionLocations name
+            //versionCollector = versions object provided by installer
+            //callback = return to when done
+        },
+        //when called it needs to download the server jar with the helper function downloadFile, you need to specify downloadURL, savePath (provided by installer), callback (provided)
+        downloadJar: function(version, serverVersion, savePath, callback, buildNumber) {
+            version = versionLocations name
+            serverVersion = server version
+            savePath = path to download jar to (provided by installer)
+            callback = return to when done / pass to downloadFile
+            buildNumber = optional only specify when buildlist is true
+        }
+    }
+    */
     paperapi: {
         buildlist: true,
         getVersions: function(version, versionCollector, callback) {
@@ -542,8 +711,9 @@ var apis = {
                 callback(response.data.builds)
             })
         },
-        downloadJar: function(version, serverVersion) {
-
+        downloadJar: function(version, serverVersion, savePath, callback, buildNumber) {
+            var downloadURL = `https://api.papermc.io/v2/projects/${version}/versions/${serverVersion}/builds/${buildNumber}/downloads/${version}-${serverVersion}-${buildNumber}.jar`
+            downloadFile(downloadURL, savePath, callback)
         }
     },
     getbukkit: {
@@ -570,16 +740,44 @@ var apis = {
             })
         },
         //TODO: finish this
-        downloadJar: function(version, serverVersion) {
+        downloadJar: function(version, serverVersion, savePath, callback) {
             axios({
                 method: "get",
                 url: versions[version][serverVersion].optdata.url
             }).then(function(response) {
                 var parsedHTML = cheerio.load(response.data)
                 var downloadLink = parsedHTML(".well h2 a").attr("href")
-                callback(downloadLink)
+                downloadFile(downloadLink, savePath, callback)
             })
         }
+    }
+}
+
+var startScriptTemplates = {
+    //usage
+    /*
+    platform: {
+        //start of start script
+        template: "",
+        //end of start script
+        templateEnd: "",
+        //file extension of start script
+        fileextension: "",
+        //run chmod on start script
+        chmod: false
+    }
+    */
+    win32: {
+        template: "@echo off\n",
+        templateEnd: "\n@echo on",
+        fileextension: "bat",
+        chmod: false
+    },
+    linux: {
+        template: "#!/bin/bash\n",
+        templateEnd: "",
+        fileextension: "sh",
+        chmod: true
     }
 }
 

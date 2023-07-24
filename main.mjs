@@ -176,9 +176,17 @@ function serverInfoCallback(input) {
                 case "retry":
                 case "r":
                     serverInfoMenu.data.pageIndex = 1
-                    apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
-                        serverInfoMenu.data.buildlist = response
-                        serverInfoMenu.showMenu()
+                    checkInternet(function(response) {
+                        if (response) {
+                            apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                serverInfoMenu.data.buildlist = response
+                                serverInfoMenu.showMenu()
+                            })
+                        }
+                        else {
+                            serverInfoMenu.data.pageIndex = "0a"
+                            serverInfoMenu.showMenu()
+                        }
                     })
                     break
             }

@@ -77,7 +77,7 @@ function printServerInfo() {
             break
         case 3:
             serverInfoMenu.userPrompt = chalk.yellow("?")
-            console.log("Enter server name:")
+            console.log("Enter server name: (enter nothing to go back)")
             break
         case "3a":
             serverInfoMenu.userPrompt = chalk.yellow("?")
@@ -142,6 +142,7 @@ function serverInfoCallback(input) {
 
                         if (!apis[serverInfoMenu.data.api].buildlist) {
                             serverInfoMenu.data.pageIndex++
+                            serverInfoMenu.data.buildVersion = "latest"
                             serverInfoMenu.showMenu()
                         }
                         else {
@@ -196,6 +197,10 @@ function serverInfoCallback(input) {
                             serverInfoMenu.showMenu()
                         }
                     })
+                    break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
                     break
             }
             break
@@ -412,6 +417,10 @@ function serverInfoCallback(input) {
                         }
                     }, serverInfoMenu.data.buildVersion, serverInfoMenu.data.buildlist ? serverInfoMenu.data.buildlist : null)
                     break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
+                    break
             }
             break
         case "5a":
@@ -433,6 +442,10 @@ function serverInfoCallback(input) {
                             mainMenu.showMenu()
                         }
                     }, serverInfoMenu.data.buildVersion, serverInfoMenu.data.buildlist ? serverInfoMenu.data.buildlist : null)
+                    break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
                     break
             }
             break

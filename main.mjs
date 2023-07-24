@@ -407,11 +407,12 @@ function installer(version, serverVersion, installDir, createDir, serverName, mi
             console.log(chalk.green("Downloaded server jar!"))
         }
         console.log("Creating start script...")
-        var startScript = `${startScriptTemplates[ostype].template}java${minRAM == "" ? "" : ` -Xms${minRAM}`}${maxRAM == "" ? "" : ` -Xmx${maxRAM}`} -jar ${filename}${startScriptTemplates[ostype].templateEnd}`
-        var startScriptPath = path.join(workingDir, `start.${startScriptTemplates[ostype].fileextension}`)
+        var scriptTemplate = startScriptTemplates[ostype].link ? startScriptTemplates[startScriptTemplates[ostype].link] : startScriptTemplates[ostype]
+        var startScript = `${scriptTemplate}java${minRAM == "" ? "" : ` -Xms${minRAM}`}${maxRAM == "" ? "" : ` -Xmx${maxRAM}`} -jar ${filename}${scriptTemplate.templateEnd}`
+        var startScriptPath = path.join(workingDir, `start.${scriptTemplate.fileextension}`)
         fs.writeFileSync(startScriptPath, startScript)
         console.log(chalk.green("Created start script!"))
-        if (startScriptTemplates[ostype].chmod) {
+        if (scriptTemplate.chmod) {
             console.log("Changing permissions...")
             var stats = fs.statSync(startScriptPath);
             var currentPermissions = stats.mode;
@@ -764,7 +765,9 @@ var startScriptTemplates = {
         //file extension of start script
         fileextension: "",
         //run chmod on start script
-        chmod: false
+        chmod: false,
+        //link to another same template (optional (only when template duplicate but with different name))
+        link: "win32"
     }
     */
     win32: {
@@ -778,7 +781,12 @@ var startScriptTemplates = {
         templateEnd: "",
         fileextension: "sh",
         chmod: true
-    }
+    },
+    //termux
+    android: {
+        link: "linux"
+    } 
+
 }
 
 //parsed versions

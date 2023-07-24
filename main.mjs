@@ -99,6 +99,11 @@ function printServerInfo() {
             console.log(`Minimum ram: ${chalk.magenta(serverInfoMenu.data.minRAM == "" ? "default": serverInfoMenu.data.minRAM)}`)
             console.log(`Maximum ram: ${chalk.magenta(serverInfoMenu.data.maxRAM == "" ? "default": serverInfoMenu.data.maxRAM)}`)
             break
+        case "5a":
+            serverInfoMenu.userPrompt = chalk.yellow("?")
+            var choices = chalk.green(`(${chalk.underline("r")}etry/${chalk.underline("m")}enu)`)
+            console.log(chalk.red(`Download failed! Please try again! ${choices}`))
+            break
     }
 }
 
@@ -347,9 +352,30 @@ function serverInfoCallback(input) {
                 case "y":
                     installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
                         if (!finish) {
-                            console.log(chalk.red("Download failed! Please try again!"))
+                            serverInfoMenu.data.pageIndex = "5a"
+                            serverInfoMenu.showMenu()
+                        }
+                        else {
                             cliMenu.waitForEnter()
                             mainMenu.showMenu()
+                        }
+                    }, serverInfoMenu.data.buildVersion, serverInfoMenu.data.buildlist ? serverInfoMenu.data.buildlist : null)
+                    break
+            }
+            break
+        case "5a":
+            switch (input) {
+                case "menu":
+                case "m":
+                    mainMenu.showMenu()
+                    break
+                case "retry":
+                case "r":
+                    console.log("Retrying...")
+                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
+                        if (!finish) {
+                            serverInfoMenu.data.pageIndex = "5a"
+                            serverInfoMenu.showMenu()
                         }
                         else {
                             cliMenu.waitForEnter()
@@ -597,7 +623,7 @@ function downloadFile(url, savePath, callback) {
             }
         })
     })
-    
+
     downloadRequest.on("error", function() {
         file.close()
         if (fs.existsSync(savePath)) {

@@ -597,6 +597,17 @@ function downloadFile(url, savePath, callback) {
             }
         })
     })
+    
+    downloadRequest.on("error", function() {
+        file.close()
+        if (fs.existsSync(savePath)) {
+            fs.unlinkSync(savePath)
+        }
+        if (!calledBack) {
+            calledBack = true
+            callback(false)
+        }
+    })
 }
 
 function getBiggestNumber(array) {

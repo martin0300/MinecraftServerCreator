@@ -523,12 +523,28 @@ function installer(version, serverVersion, installDir, createDir, serverName, mi
         }
         var filename = `${version}-${serverVersion}-${buildnumber}.jar`
         var savePath = path.join(workingDir, filename)
-        apis[api].downloadJar(version, serverVersion, savePath, installStage2, buildnumber)
+        checkInternet(function(response) {
+            if (response) {
+                apis[api].downloadJar(version, serverVersion, savePath, installStage2, buildnumber)
+            }
+            else {
+                callback(false)
+                return
+            }
+        })
     }
     else {
         var filename = `${version}-${serverVersion}.jar`
         var savePath = path.join(workingDir, filename)
-        apis[api].downloadJar(version, serverVersion, savePath, installStage2)
+        checkInternet(function(response) {
+            if (response) {
+                apis[api].downloadJar(version, serverVersion, savePath, installStage2)
+            }
+            else {
+                callback(false)
+                return
+            }
+        })
     }
 }
 

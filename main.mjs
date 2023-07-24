@@ -50,6 +50,11 @@ function printServerInfo() {
             console.log(chalk.magenta("-back"))
             console.log(chalk.magenta("-menu"))
             break
+        case "0a":
+            serverInfoMenu.userPrompt = chalk.yellow("?")
+            var choices = chalk.green(`(${chalk.underline("r")}etry/${chalk.underline("m")}enu/${chalk.underline("b")}ack)`)
+            console.log(chalk.red(`Buildlist download failed! There is no internet connection! Please try again! ${choices}`))
+            break
         case 1:
             serverInfoMenu.userPrompt = chalk.yellow("?")
             var yesno = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
@@ -140,12 +145,41 @@ function serverInfoCallback(input) {
                             serverInfoMenu.showMenu()
                         }
                         else {
-                            apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
-                                serverInfoMenu.data.buildlist = response
-                                serverInfoMenu.showMenu()
+                            checkInternet(function(response) {
+                                if (response) {
+                                    apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                        serverInfoMenu.data.buildlist = response
+                                        serverInfoMenu.showMenu()
+                                    })
+                                }
+                                else {
+                                    serverInfoMenu.data.pageIndex = "0a"
+                                    serverInfoMenu.showMenu()
+                                }
                             })
                         }
                     }
+                    break
+            }
+            break
+        case "0a":
+            switch (input) {
+                case "menu":
+                case "m":
+                    mainMenu.showMenu()
+                    break
+                case "back":
+                case "b":
+                    serverInfoMenu.data.pageIndex = 0
+                    serverInfoMenu.showMenu()
+                    break
+                case "retry":
+                case "r":
+                    serverInfoMenu.data.pageIndex = 1
+                    apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                        serverInfoMenu.data.buildlist = response
+                        serverInfoMenu.showMenu()
+                    })
                     break
             }
             break
@@ -515,18 +549,6 @@ function mainMenuPrint() {
     console.log(chalk.green(`-${chalk.underline("e")}xit`))
 }
 
-//parses download pages for server jar download links
-function getBukkitDownloadParser(url, callback) {
-    axios({
-        method: "get",
-        url: url
-    }).then(function(response) {
-        var parsedHTML = cheerio.load(response.data)
-        var downloadLink = parsedHTML(".well h2 a").attr("href")
-        callback(downloadLink)
-    })
-}
-
 function init() {
     config.initConfig(true)
 }
@@ -789,7 +811,7 @@ var apis = {
                 callback()
             })
         },
-        //TODO: finish this
+        //it finished
         downloadJar: function(version, serverVersion, savePath, callback) {
             axios({
                 method: "get",

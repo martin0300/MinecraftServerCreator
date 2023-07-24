@@ -25,6 +25,7 @@ import http from "http"
 import https from "https"
 import path from "path";
 import os from "os"
+import dns from "dns"
 
 const mscVersion = "2.0-Beta"
 var ostype = os.platform()
@@ -636,6 +637,17 @@ function downloadFile(url, savePath, callback) {
     })
 }
 
+//thx stackoverflow
+function checkInternet(callback) {
+    dns.lookup('google.com',function(err) {
+        if (err && err.code == "ENOTFOUND") {
+            callback(false);
+        } else {
+            callback(true);
+        }
+    })
+}
+
 function getBiggestNumber(array) {
     var largestFound = 0
     for (var x in array) {
@@ -829,7 +841,16 @@ var startScriptTemplates = {
 //parsed versions
 var versions = {}
 
-fetchAPIMCJars(function() {
-    setupCreateMenu()
-    mainMenu.showMenu()
+checkInternet(function(response) {
+    if (response) {
+        fetchAPIMCJars(function() {
+            setupCreateMenu()
+            mainMenu.showMenu()
+        })
+    }
+    else {
+        console.log(chalk.red("No internet connection!"))
+        process.exit(1)
+    }
 })
+

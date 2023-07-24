@@ -53,7 +53,7 @@ function printServerInfo() {
         case "0a":
             serverInfoMenu.userPrompt = chalk.yellow("?")
             var choices = chalk.green(`(${chalk.underline("r")}etry/${chalk.underline("m")}enu/${chalk.underline("b")}ack)`)
-            console.log(chalk.red(`Buildlist download failed! There is no internet connection! Please try again! ${choices}`))
+            console.log(chalk.red(`Buildlist download failed! Please try again! ${choices}`))
             break
         case 1:
             serverInfoMenu.userPrompt = chalk.yellow("?")
@@ -148,6 +148,10 @@ function serverInfoCallback(input) {
                             checkInternet(function(response) {
                                 if (response) {
                                     apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                        if (response == false) {
+                                            serverInfoMenu.data.pageIndex = "0a"
+                                            serverInfoMenu.showMenu()
+                                        }
                                         serverInfoMenu.data.buildlist = response
                                         serverInfoMenu.showMenu()
                                     })
@@ -179,6 +183,10 @@ function serverInfoCallback(input) {
                     checkInternet(function(response) {
                         if (response) {
                             apis[serverInfoMenu.data.api].getBuildlist(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, function(response) {
+                                if (response == false) {
+                                    serverInfoMenu.data.pageIndex = "0a"
+                                    serverInfoMenu.showMenu()
+                                }
                                 serverInfoMenu.data.buildlist = response
                                 serverInfoMenu.showMenu()
                             })
@@ -621,7 +629,11 @@ function fetchAPIMCJars(callback) {
     versionCollectorVars.versionLocationsKeys = Object.keys(versionLocations)
     versionCollectorVars.doneFunction = callback
     versionCollectorVars.versionLocationsIndex = 0
-    versionCollectorVars.callbackFunction = function(start = false) {
+    versionCollectorVars.callbackFunction = function(finished = true, start = false) {
+        if (!finished) {
+            console.log(chalk.red("Database download failed! Exiting..."))
+            process.exit(1)
+        }
         if (!start) {
             versionCollectorVars.versionLocationsIndex++
         }
@@ -634,7 +646,7 @@ function fetchAPIMCJars(callback) {
             versionCollectorVars.doneFunction()
         }
     }
-    versionCollectorVars.callbackFunction(true)
+    versionCollectorVars.callbackFunction(true, true)
 }
 
 function downloadFile(url, savePath, callback) {
@@ -767,20 +779,20 @@ var apis = {
         getVersions: function(version, versionCollector, callback) {
             //version = versionLocations name
             //versionCollector = versions object provided by installer
-            //callback = return to when done
+            //callback = return to when done (return false if fail)
         },
         //if buildlist is true, needs to return a list of numbers
         getBuildlist: function(version, serverVersion, callback) {
             //version = versionLocations name
             //versionCollector = versions object provided by installer
-            //callback = return to when done
+            //callback = return to when done (return false if fail)
         },
         //when called it needs to download the server jar with the helper function downloadFile, you need to specify downloadURL, savePath (provided by installer), callback (provided)
         downloadJar: function(version, serverVersion, savePath, callback, buildNumber) {
             version = versionLocations name
             serverVersion = server version
             savePath = path to download jar to (provided by installer)
-            callback = return to when done / pass to downloadFile
+            callback = return to when done / pass to downloadFile (return false if fail)
             buildNumber = optional only specify when buildlist is true
         }
     }
@@ -800,6 +812,8 @@ var apis = {
                     }
                 }
                 callback()
+            }).catch(function(error) {
+                callback(false)
             })
         },
         getBuildlist: function(version, serverVersion, callback) {
@@ -808,6 +822,8 @@ var apis = {
                 url: `https://api.papermc.io/v2/projects/${version}/versions/${serverVersion}`
             }).then(function(response) {
                 callback(response.data.builds)
+            }).catch(function(error) {
+                callback(false)
             })
         },
         downloadJar: function(version, serverVersion, savePath, callback, buildNumber) {
@@ -836,6 +852,8 @@ var apis = {
                     }
                 })
                 callback()
+            }).catch(function(error) {
+                callback(false)
             })
         },
         //it finished
@@ -847,6 +865,8 @@ var apis = {
                 var parsedHTML = cheerio.load(response.data)
                 var downloadLink = parsedHTML(".well h2 a").attr("href")
                 downloadFile(downloadLink, savePath, callback)
+            }).catch(function(error) {
+                callback(false)
             })
         }
     }

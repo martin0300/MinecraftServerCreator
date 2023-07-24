@@ -657,8 +657,10 @@ function downloadFile(url, savePath, callback) {
 
         file.on("finish", function() {
             file.close()
-            console.log("finished", calledBack)
-            callback(true)
+            if (!callback) {
+                calledBack = true
+                callback(true)
+            }
         })
         file.on("error", function() {
             file.close()

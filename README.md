@@ -88,6 +88,6 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
 
 # Contact info
 - E-mail: martin0300a@gmail.com
-- Website: martin0300.github.io
-- Github: github.com/martin0300
+- Website: https://martin0300.github.io
+- Github: https://github.com/martin0300
 

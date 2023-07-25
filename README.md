@@ -7,8 +7,33 @@ Script for creating minecraft servers written in javascript.
 MinecraftServerCreator is currently being rewritten in javascript. Old python3 version will not receive any future updates.
 
 # Usage
+**Use the underlined characters for faster navigation**
+- Navigation:
+   - For easier navigation use the underlined characters as shortcuts
+   - Type back or "b" to go back one page or menu or "m" to go to the main menu (works in any menu unless specified)
+   - Green text are choices or success messages
+   - Purple text are alternative choices or values in create summary
+   - Red text are errors 
+   - Yellow text is user prompts
+   - White text is questions or general information
+   - Underlined characters are shortcuts
 - Create Server:
   1. Start MinecraftServerCreator if not installed refer to [Installing](#installing) in the readme
+  2. Type create or "c"
+  3. Choose server type
+  4. Choose server version
+  5. If asked to download latest build choose yes or no if you want to specify a build version
+  6. Specify where to install server (path must exist!)
+  7. Specify server name
+  8. Create folder with name if yes then it will install in a new directory in the specified path that has the server name if no it will install into the specified path 
+  9. Enter minimum amount of ram for server in MB or GB (leave empty for unlimited)
+  10. Enter maximum amount of ram for server in MB or GB (leave empty for unlimited)
+  11. Create server data file with server information for MinecraftServerCreator
+  12. Check if all information is correct and type yes if not then type no for restarting from start or type back to go back one page
+  13. Press enter and type exit or "e"
+  14. Navigate into server directory
+  15. Accept EULA and run the start script
+
 
 # Installing
 **Prebuilt binaries will be available after stable release**

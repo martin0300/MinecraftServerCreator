@@ -86,3 +86,8 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
 - [axios](https://github.com/axios/axios) - Make HTTP requests for apis or web scraping
 - [cheerio](https://github.com/cheeriojs/cheerio) - Web scraping
 
+# Contact info
+- E-mail: martin0300a@gmail.com
+- Website: martin0300.github.io
+- Github: github.com/martin0300
+

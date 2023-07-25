@@ -10,7 +10,7 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
 - Create Server:
   1. Start MinecraftServerCreator if not installed refer to [Installing](#installing) in the readme
 
-# Installing {#installing}
+# Installing
 **Prebuilt binaries will be available after stable release**
 1. Install Node.js, npm and git if not installed
    - Windows:

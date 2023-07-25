@@ -17,22 +17,21 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
    - Yellow text is user prompts
    - White text is questions or general information
    - Underlined characters are shortcuts
-- Create Server:
-  1. Start MinecraftServerCreator if not installed refer to [Installing](#installing) in the readme
-  2. Type create or "c"
-  3. Choose server type
-  4. Choose server version
-  5. If asked to download latest build choose yes or no if you want to specify a build version
-  6. Specify where to install server (path must exist!)
-  7. Specify server name
-  8. Create folder with name if yes then it will install in a new directory in the specified path that has the server name if no it will install into the specified path 
-  9. Enter minimum amount of ram for server in MB or GB (leave empty for unlimited)
-  10. Enter maximum amount of ram for server in MB or GB (leave empty for unlimited)
-  11. Create server data file with server information for MinecraftServerCreator
-  12. Check if all information is correct and type yes if not then type no for restarting from start or type back to go back one page
-  13. Press enter and type exit or "e"
-  14. Navigate into server directory
-  15. Accept EULA and run the start script
+- Create Server (Made readable by ChatGPT. I can't write lol):
+  1. **Getting Started**: If you haven't installed MinecraftServerCreator yet, refer to the [Installing](#installing) section in the README.
+  2. **Create a Server**: Type "create" or simply "c" to initiate the server creation process.
+  3. **Server Type**: Choose the type of server you want to create.
+  4. **Server Version**: Select the desired version of the server software.
+  5. **Download Latest Build**: If prompted, choose whether to download the latest build. You can also specify a specific build version if preferred.
+  6. **Install Location**: Specify the path where you want to install the server. Make sure the path already exists.
+  7. **Server Name**: Enter a name for your server.
+  8. **Create Folder**: Decide whether to create a new folder for the server within the specified path using the server name or install directly into the specified path.
+  9. **Allocating RAM**: Enter the minimum and maximum amount of RAM (in MB or GB) for the server. Leave it empty for unlimited RAM.
+  10. **Create Server Data File**: Generate a server data file containing essential information for MinecraftServerCreator.
+  11. **Review and Confirm**: Check if all the information is correct. Type "yes" to proceed, "no" to restart from the beginning, or "back" to return to the previous page.
+  12. **Finalize**: Press Enter and type "exit" or simply "e" to complete the process.
+  13. **Navigate to Server Directory**: Go into the server directory to access the server files.
+  14. **Accept EULA and Start**: Make sure to accept the End User License Agreement (EULA) and run the start script to start the server.
 
 
 # Installing

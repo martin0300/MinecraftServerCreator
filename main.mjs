@@ -20,7 +20,7 @@ import config, { loadConfig } from "./libs/config.js"
 import chalk from "chalk"
 import * as cheerio from 'cheerio';
 import axios from "axios"
-import fs from "fs"
+import fs, { copyFileSync } from "fs"
 import http from "http"
 import https from "https"
 import path from "path";
@@ -47,8 +47,8 @@ function printServerInfo() {
             for (var version in versions[serverType]) {
                 console.log(chalk.green(`-${version}`))
             }
-            console.log(chalk.magenta("-back"))
-            console.log(chalk.magenta("-menu"))
+            console.log(chalk.magenta(`-${chalk.underline("b")}ack`))
+            console.log(chalk.magenta(`-${chalk.underline("m")}enu`))
             break
         case "0a":
             serverInfoMenu.userPrompt = chalk.yellow("?")
@@ -67,13 +67,13 @@ function printServerInfo() {
             for (var build in serverInfoMenu.data.buildlist) {
                 console.log(chalk.green(`-${serverInfoMenu.data.buildlist[build]}`))
             }
-            console.log(chalk.magenta("-latest"))
-            console.log(chalk.magenta("-back"))
-            console.log(chalk.magenta("-menu"))
+            console.log(chalk.magenta(`-${chalk.underline("l")}atest`))
+            console.log(chalk.magenta(`-${chalk.underline("b")}ack`))
+            console.log(chalk.magenta(`-${chalk.underline("m")}enu`))
             break
         case 2:
             serverInfoMenu.userPrompt = chalk.yellow("?")
-            console.log("Choose install location:")
+            console.log("Choose install location: (enter nothing to go back)")
             break
         case 3:
             serverInfoMenu.userPrompt = chalk.yellow("?")
@@ -94,6 +94,11 @@ function printServerInfo() {
             break
         case 5:
             serverInfoMenu.userPrompt = chalk.yellow("?")
+            var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o)`
+            console.log(`Create server data file? (helps msc manage the server) ${chalk.green(choices)}`)
+            break
+        case 6:
+            serverInfoMenu.userPrompt = chalk.yellow("?")
             var choices = `(${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack/${chalk.underline("m")}enu)`
             console.log(`Everything is correct? ${chalk.green(choices)}`)
             console.log(`Server type: ${chalk.magenta(serverInfoMenu.data.version)}`)
@@ -104,8 +109,9 @@ function printServerInfo() {
             console.log(`Create directory: ${chalk.magenta(serverInfoMenu.data.createDir ? "yes" : "no")}`)
             console.log(`Minimum ram: ${chalk.magenta(serverInfoMenu.data.minRAM == "" ? "default": serverInfoMenu.data.minRAM)}`)
             console.log(`Maximum ram: ${chalk.magenta(serverInfoMenu.data.maxRAM == "" ? "default": serverInfoMenu.data.maxRAM)}`)
+            console.log(`Create data file: ${chalk.magenta(serverInfoMenu.data.createData ? "yes" : "no")}`)
             break
-        case "5a":
+        case "6a":
             serverInfoMenu.userPrompt = chalk.yellow("?")
             var choices = chalk.green(`(${chalk.underline("r")}etry/${chalk.underline("m")}enu)`)
             console.log(chalk.red(`Download failed! Please try again! ${choices}`))
@@ -118,9 +124,11 @@ function serverInfoCallback(input) {
         case 0:
             switch (input) {
                 case "back":
+                case "b":
                     createMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 default:
@@ -218,10 +226,12 @@ function serverInfoCallback(input) {
                     serverInfoMenu.showMenu()
                     break
                 case "back":
+                case "b":
                     serverInfoMenu.data.pageIndex--
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 default:
@@ -233,13 +243,16 @@ function serverInfoCallback(input) {
         case "1a":
             switch (input) {
                 case "back":
+                case "b":
                     serverInfoMenu.data.pageIndex = 1
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 case "latest":
+                case "l":
                     serverInfoMenu.data.buildVersion = "latest"
                     serverInfoMenu.data.pageIndex = 2
                     serverInfoMenu.showMenu()
@@ -265,30 +278,20 @@ function serverInfoCallback(input) {
             }
             break
         case 2:
-            switch (input) {
-                case "menu":
-                    mainMenu.showMenu()
-                    break
-                case "back":
-                    if (apis[serverInfoMenu.data.api].buildlist) {
-                        serverInfoMenu.data.pageIndex--
-                    }
-                    else {
-                        serverInfoMenu.data.pageIndex -= 2
-                    }
-                    serverInfoMenu.showMenu()
-                    break
-                default:
-                    if (fs.existsSync(input)) {
-                        serverInfoMenu.data.pageIndex++
-                        serverInfoMenu.data.installDir = input
-                        serverInfoMenu.showMenu()
-                    } 
-                    else {
-                        console.log(chalk.red("Invalid directory!"))
-                        serverInfoMenu.showMenu()
-                    }
-                    break
+            if (fs.existsSync(input)) {
+                serverInfoMenu.data.pageIndex++
+                serverInfoMenu.data.installDir = input
+                serverInfoMenu.showMenu()
+            } 
+            else {
+                console.log(chalk.red("Invalid directory!"))
+                if (apis[serverInfoMenu.data.api].buildlist) {
+                    serverInfoMenu.data.pageIndex--
+                }
+                else {
+                    serverInfoMenu.data.pageIndex -= 2
+                }
+                serverInfoMenu.showMenu()
             }
             break
         case 3:
@@ -318,10 +321,12 @@ function serverInfoCallback(input) {
                     serverInfoMenu.showMenu()
                     break
                 case "back":
+                case "b":
                     serverInfoMenu.data.pageIndex = 3
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 default:
@@ -333,10 +338,12 @@ function serverInfoCallback(input) {
         case 4:
             switch (input) {
                 case "back":
+                case "b":
                     serverInfoMenu.data.pageIndex = "3a"
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 case "":
@@ -362,10 +369,12 @@ function serverInfoCallback(input) {
         case "4a":
             switch (input) {
                 case "back":
+                case "b":
                     serverInfoMenu.data.pageIndex = 4
                     serverInfoMenu.showMenu()
                     break
                 case "menu":
+                case "m":
                     mainMenu.showMenu()
                     break
                 case "":
@@ -390,13 +399,42 @@ function serverInfoCallback(input) {
             break
         case 5:
             switch (input) {
+                case "yes":
+                case "y":
+                    serverInfoMenu.data.createData = true
+                    serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.showMenu()
+                    break
+                case "no":
+                case "n":
+                    serverInfoMenu.data.createData = false
+                    serverInfoMenu.data.pageIndex++
+                    serverInfoMenu.showMenu()
+                    break
+                case "back":
+                case "b":
+                    serverInfoMenu.data.pageIndex = "4a"
+                    serverInfoMenu.showMenu()
+                    break
+                case "menu":
+                case "m":
+                    mainMenu.showMenu()
+                    break
+                default:
+                    console.log(chalk.red("Not a choice!"))
+                    serverInfoMenu.showMenu()
+                    break
+            }
+            break
+        case 6:
+            switch (input) {
                 case "menu":
                 case "m":
                     mainMenu.showMenu()
                     break
                 case "back":
                 case "b":
-                    serverInfoMenu.data.pageIndex = "4a"
+                    serverInfoMenu.data.pageIndex--
                     serverInfoMenu.showMenu()
                     break
                 case "no":
@@ -408,7 +446,7 @@ function serverInfoCallback(input) {
                 case "y":
                     installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
                         if (!finish) {
-                            serverInfoMenu.data.pageIndex = "5a"
+                            serverInfoMenu.data.pageIndex = "6a"
                             serverInfoMenu.showMenu()
                         }
                         else {
@@ -423,7 +461,7 @@ function serverInfoCallback(input) {
                     break
             }
             break
-        case "5a":
+        case "6a":
             switch (input) {
                 case "menu":
                 case "m":
@@ -434,7 +472,7 @@ function serverInfoCallback(input) {
                     console.log("Retrying...")
                     installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
                         if (!finish) {
-                            serverInfoMenu.data.pageIndex = "5a"
+                            serverInfoMenu.data.pageIndex = "6a"
                             serverInfoMenu.showMenu()
                         }
                         else {
@@ -580,6 +618,15 @@ var mainMenu = new cliMenu.Menu([
     }},
     {label: "create", shortcut: "c", callback: function() {
         createMenu.showMenu()
+    }},
+    {label: "help", shortcut: "h", callback: function() {
+        console.log("Minecraft Server Creator Help:")
+        console.log("Navigation:")
+        console.log(`You can use ${chalk.green(`${chalk.underline("b")}ack`)} to go back one menu or ${chalk.green(`${chalk.underline("m")}enu`)} to return to main menu in almost any menu.`)
+        console.log("Underlined characters in choices are shortcuts. You don't need to write out the full choice you just need to type the shortcut character.")
+        console.log("This menu is a work in progress. It sux rn.")
+        cliMenu.waitForEnter()
+        mainMenu.showMenu()
     }}
 ], mainMenuPrint, function() {
     console.log(chalk.red("Not a choice!"))
@@ -591,6 +638,7 @@ function mainMenuPrint() {
     console.log("Choices:")
     console.log(chalk.green(`-${chalk.underline("c")}reate`))
     console.log(chalk.green(`-${chalk.underline("a")}bout`))
+    console.log(chalk.green(`-${chalk.underline("h")}elp`))
     console.log(chalk.green(`-${chalk.underline("e")}xit`))
 }
 

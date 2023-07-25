@@ -6,7 +6,11 @@ Script for creating minecraft servers written in javascript.
 # Information
 MinecraftServerCreator is currently being rewritten in javascript. Old python3 version will not receive any future updates.
 
-# Installing
+# Usage
+- Create Server:
+  1. Start MinecraftServerCreator if not installed refer to [Installing](#installing) in the readme
+
+# Installing {#installing}
 **Prebuilt binaries will be available after stable release**
 1. Install Node.js, npm and git if not installed
    - Windows:

@@ -35,13 +35,13 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
       - Any terminal
    - Android:
       - Termux
-3. Clone this repository
+3. Clone this repository\
 ``git clone -b beta-js https://github.com/martin0300/MinecraftServerCreator``
-4. Change directory info MinecraftServerCreator
+4. Change directory info MinecraftServerCreator\
 ``cd MinecraftServerCreator``
-5. Run npm to install dependencies
+5. Run npm to install dependencies\
 ``npm i``
-6. Run MinecraftServerCreator
+6. Run MinecraftServerCreator\
 ``node main.js``
 
 # Database and apis

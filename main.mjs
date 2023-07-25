@@ -28,6 +28,7 @@ import os from "os"
 import dns from "dns"
 
 const mscVersion = "2.0-Beta"
+const mscInfoFileVersion = 1
 var ostype = os.platform()
 
 //replaced using function setupCreateMenu()
@@ -444,7 +445,7 @@ function serverInfoCallback(input) {
                     break
                 case "yes":
                 case "y":
-                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
+                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, serverInfoMenu.data.createData, function(finish) {
                         if (!finish) {
                             serverInfoMenu.data.pageIndex = "6a"
                             serverInfoMenu.showMenu()
@@ -470,7 +471,7 @@ function serverInfoCallback(input) {
                 case "retry":
                 case "r":
                     console.log("Retrying...")
-                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, function(finish) {
+                    installer(serverInfoMenu.data.version, serverInfoMenu.data.serverVersion, serverInfoMenu.data.installDir, serverInfoMenu.data.createDir, serverInfoMenu.data.serverName, serverInfoMenu.data.minRAM, serverInfoMenu.data.maxRAM, serverInfoMenu.data.createData, function(finish) {
                         if (!finish) {
                             serverInfoMenu.data.pageIndex = "6a"
                             serverInfoMenu.showMenu()
@@ -525,7 +526,7 @@ function isnullorempty(string) {
 	}
 }
 
-function installer(version, serverVersion, installDir, createDir, serverName, minRAM, maxRAM, callback, build = null, buildlist = null) {
+function installer(version, serverVersion, installDir, createDir, serverName, minRAM, maxRAM, createData, callback, build = null, buildlist = null) {
     var installStage2 = function(finish) {
         if (!finish) {
             callback(false)
@@ -536,7 +537,7 @@ function installer(version, serverVersion, installDir, createDir, serverName, mi
         }
         console.log("Creating start script...")
         var scriptTemplate = startScriptTemplates[ostype].link ? startScriptTemplates[startScriptTemplates[ostype].link] : startScriptTemplates[ostype]
-        var startScript = `${scriptTemplate}java${minRAM == "" ? "" : ` -Xms${minRAM}`}${maxRAM == "" ? "" : ` -Xmx${maxRAM}`} -jar ${filename}${scriptTemplate.templateEnd}`
+        var startScript = `${scriptTemplate.template}java${minRAM == "" ? "" : ` -Xms${minRAM}`}${maxRAM == "" ? "" : ` -Xmx${maxRAM}`} -jar ${filename}${scriptTemplate.templateEnd}`
         var startScriptPath = path.join(workingDir, `start.${scriptTemplate.fileextension}`)
         fs.writeFileSync(startScriptPath, startScript)
         console.log(chalk.green("Created start script!"))
@@ -547,6 +548,28 @@ function installer(version, serverVersion, installDir, createDir, serverName, mi
             var newPermissions = currentPermissions | 0o111;
             fs.chmodSync(startScriptPath, newPermissions)
             console.log(chalk.green("Changed permissions successfully!"))
+        }
+        if (createData) {
+            console.log("Creating server data file...")
+            var dataFile = {
+                infoVer: mscInfoFileVersion,
+                serverInfo: {
+                    serverType: version,
+                    serverVersion: serverVersion,
+                    serverName: serverName,
+                    minRAM: minRAM,
+                    maxRAM: maxRAM,
+                    bulidNumber: buildnumber ? buildnumber : false,
+                    installDir: workingDir
+                },
+                creationInfo: {
+                    creationDate: Date.now(),
+                    creatorVersion: mscVersion,
+                }
+            }
+            var dataFilePath = path.join(workingDir, "serverInfo.json")
+            fs.writeFileSync(dataFilePath, JSON.stringify(dataFile))
+            console.log(chalk.green("Created server data file!"))
         }
         console.log(chalk.green("Server created!"))
         callback(true)

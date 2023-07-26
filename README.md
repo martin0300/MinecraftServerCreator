@@ -70,7 +70,7 @@ MinecraftServerCreator is currently being rewritten in javascript. Old python3 v
 5. Run npm to install dependencies\
 ``npm i``
 6. Run MinecraftServerCreator\
-``node main.js``
+``node main.mjs``
 
 # Database and apis
 - getbukkit.org (web scraped)

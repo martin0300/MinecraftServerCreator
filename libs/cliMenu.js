@@ -15,7 +15,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 const prompt = require("prompt-sync")({sigint: true})
 
 class Menu {
@@ -127,6 +126,72 @@ class FreeMenu {
 
 class placeHolderMenu {
     showMenu() {
+        return
+    }
+}
+
+class nestedMenu {
+    constructor(menus, startMenu) {
+        this.menus = menus
+        this.currentMenu = startMenu
+        this.currentMenuPos = 0
+        this.menuTemplate = {
+            label: "",
+            menu: class {}
+        }
+
+        if (typeof this.menus !== "object") {
+            throw new Error("menus must be an array")
+        }
+        if (typeof this.startMenu !== "string") {
+            throw new Error("startMenu must be a string")
+        }
+        if (this.currentMenu.length == 0) {
+            throw new Error("startMenu can't be empty!")
+        }
+
+        for (var x in this.menus) {
+            var element = this.menus[x]
+            var elementKeys = Object.keys(element)
+            var templateKeys = Object.keys(this.menuTemplate)
+            for (var i in templateKeys) {
+                if (!elementKeys.includes(templateKeys[i])) {
+                    throw new Error(`${templateKeys[i]} is missing from menus with index: ${x}!`)
+                }
+                var templateKeyType = typeof this.optionsTemplate[templateKeys[i]]
+                var elementKeyType = typeof element[templateKeys[i]]
+                if (templateKeyType != elementKeyType) {
+                    throw new Error(`${templateKeys[i]} must be type ${templateKeyType} at index: ${x}`)
+                }
+                if (templateKeyType == "string" && element[templateKeys[i]].length == 0) {
+                    throw new Error(`${templateKeys[i]} cannot be empty with index: ${x}!`)
+                }
+            }
+        }
+
+        this.jumpToMenu(this.currentMenu)
+    }
+
+    jumpToMenu(menuName) {
+        var found = false
+        for (var x in this.menus) {
+            if (this.menus[x].label == menuName) {
+                found = true
+                this.currentMenu = menuName
+                this.currentMenuPos = x
+                break
+            }
+        }
+        if (found) {
+            return true
+        }
+        else {
+            return false
+        }
+    } 
+
+    showMenu() {
+        this.menus[this.currentMenuPos].menu.showMenu()
         return
     }
 }

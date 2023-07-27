@@ -64,6 +64,30 @@ class Menu {
         onCreation()
     }
 
+    jumpToChoice(choiceLabel) {
+        var found = false
+        for (var findLabel in this.options) {
+            var element = this.options[findLabel]
+            if (element.label == choiceLabel || element.shortcut == choiceLabel) {
+                if (element.callback.length == 0) {
+                    element.callback()
+                }
+                else if (element.callback.length == 1) {
+                    element.callback(userInput)
+                }
+                else {
+                    element.callback(userInput, element.label)
+                }
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            return false
+        }
+        return
+    }
+
     showMenu(data = null) {
         if (this.printMenu.length == 0) {
             this.printMenu()
@@ -137,13 +161,12 @@ class nestedMenu {
         this.currentMenuPos = 0
         this.menuTemplate = {
             label: "",
-            menu: class {}
         }
 
         if (typeof this.menus !== "object") {
             throw new Error("menus must be an array")
         }
-        if (typeof this.startMenu !== "string") {
+        if (typeof this.currentMenu !== "string") {
             throw new Error("startMenu must be a string")
         }
         if (this.currentMenu.length == 0) {
@@ -158,7 +181,7 @@ class nestedMenu {
                 if (!elementKeys.includes(templateKeys[i])) {
                     throw new Error(`${templateKeys[i]} is missing from menus with index: ${x}!`)
                 }
-                var templateKeyType = typeof this.optionsTemplate[templateKeys[i]]
+                var templateKeyType = typeof this.menuTemplate[templateKeys[i]]
                 var elementKeyType = typeof element[templateKeys[i]]
                 if (templateKeyType != elementKeyType) {
                     throw new Error(`${templateKeys[i]} must be type ${templateKeyType} at index: ${x}`)
@@ -172,7 +195,7 @@ class nestedMenu {
         this.jumpToMenu(this.currentMenu)
     }
 
-    jumpToMenu(menuName) {
+    jumpToMenu(menuName, showMenu = false) {
         var found = false
         for (var x in this.menus) {
             if (this.menus[x].label == menuName) {
@@ -183,7 +206,12 @@ class nestedMenu {
             }
         }
         if (found) {
-            return true
+            if (showMenu) {
+                this.showMenu()
+            }
+            else {
+                return true
+            }
         }
         else {
             return false
@@ -206,5 +234,6 @@ module.exports = {
     FreeMenu,
     placeHolderMenu,
     nestedMenu,
-    waitForEnter
+    waitForEnter,
+    prompt
 }

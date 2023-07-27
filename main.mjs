@@ -29,13 +29,54 @@ import dns from "dns"
 
 const mscVersion = "2.0-Beta"
 const mscInfoFileVersion = 1
+const mscPlugmanVerion = "2.0-Beta"
 var ostype = os.platform()
 
 //replaced using function setupCreateMenu()
 var createMenu = new cliMenu.placeHolderMenu()
 
-var pluginManagerMenu = new cliMenu.Menu([{label: "search"}
-])
+var pluginManagerMainMenu = new cliMenu.Menu([{label: "search", shortcut: "s", callback: function() {
+    pluginManagerMenu.jumpToMenu("search", true)
+}}], function() {
+    console.log(`MSC Plugin Manager V${chalk.blue(mscPlugmanVerion)}`)
+    console.log("Choices:")
+    console.log(chalk.green(`-${chalk.underline("s")}earch`))
+}, function() {
+    console.log(chalk.red("Not a choice!"))
+    pluginManagerMenu.showMenu()
+}, chalk.yellow("?"))
+
+var pluginManagerSearchMenu = new cliMenu.Menu([
+    {label: "name", shortcut: "n", callback: function() {
+        var name = cliMenu.prompt("Name?")
+        console.log(name)
+        if (isnullorempty(name)) {
+            console.log(chalk.red("Not a choice!"))
+            pluginManagerSearchMenu.jumpToChoice("name")
+        }
+        console.log("da name " + name)
+        pluginManagerMenu.showMenu()
+    }},
+    {label: "id", shortcut: "i", callback: function() {
+        var name = cliMenu.prompt("ID?")
+        if (isnullorempty(name)) {
+            console.log(chalk.red("Not a choice!"))
+            pluginManagerSearchMenu.jumpToChoice("id")
+        }
+        console.log("da id " + name)
+        pluginManagerMenu.showMenu()
+    }}
+], function() {
+    console.log("id, name")
+}, function() {
+    console.log(chalk.red("Not a choice!"))
+    pluginManagerMenu.showMenu()
+}, chalk.yellow("?"))
+
+var pluginManagerMenu = new cliMenu.nestedMenu([
+    {label: "main", menu: pluginManagerMainMenu},
+    {label: "search", menu: pluginManagerSearchMenu}
+], "main")
 
 var serverInfoMenu = new cliMenu.FreeMenu(serverInfoCallback, printServerInfo, chalk.yellow("#"), {
     pageIndex: 0
@@ -653,7 +694,11 @@ var mainMenu = new cliMenu.Menu([
         console.log("This menu is a work in progress. It sux rn.")
         cliMenu.waitForEnter()
         mainMenu.showMenu()
-    }}
+    }},
+    {label: "plugins", shortcut: "p", callback: function() {
+        pluginManagerMenu.jumpToMenu("main", true)
+    }
+}
 ], mainMenuPrint, function() {
     console.log(chalk.red("Not a choice!"))
     mainMenu.showMenu()
@@ -663,6 +708,7 @@ function mainMenuPrint() {
     console.log(`Welcome to MinecraftServerCreator ${chalk.blue(`V${mscVersion}`)}!`)
     console.log("Choices:")
     console.log(chalk.green(`-${chalk.underline("c")}reate`))
+    console.log(chalk.green(`-${chalk.underline("p")}lugins`))
     console.log(chalk.green(`-${chalk.underline("a")}bout`))
     console.log(chalk.green(`-${chalk.underline("h")}elp`))
     console.log(chalk.green(`-${chalk.underline("e")}xit`))

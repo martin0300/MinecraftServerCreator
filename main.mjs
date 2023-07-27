@@ -34,6 +34,9 @@ var ostype = os.platform()
 //replaced using function setupCreateMenu()
 var createMenu = new cliMenu.placeHolderMenu()
 
+var pluginManagerMenu = new cliMenu.Menu([{label: "search"}
+])
+
 var serverInfoMenu = new cliMenu.FreeMenu(serverInfoCallback, printServerInfo, chalk.yellow("#"), {
     pageIndex: 0
 })

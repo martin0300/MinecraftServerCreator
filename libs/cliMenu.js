@@ -205,5 +205,6 @@ module.exports = {
     Menu,
     FreeMenu,
     placeHolderMenu,
+    nestedMenu,
     waitForEnter
 }

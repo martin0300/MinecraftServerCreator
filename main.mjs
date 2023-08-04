@@ -26,6 +26,7 @@ import https from "https"
 import path from "path";
 import os from "os"
 import dns from "dns"
+import pluginFetcher from "./libs/pluginFetcher.js"
 
 const mscVersion = "2.0-Beta"
 const mscInfoFileVersion = 1
@@ -34,6 +35,13 @@ var ostype = os.platform()
 
 //replaced using function setupCreateMenu()
 var createMenu = new cliMenu.placeHolderMenu()
+
+var pluginSearchResultMenu = new cliMenu.FreeMenu(function(input) {
+    
+}, function() {
+}, chalk.yellow("?"), {
+    pageIndex: 0
+})
 
 var pluginManagerMainMenu = new cliMenu.Menu([{label: "search", shortcut: "s", callback: function() {
     pluginManagerMenu.jumpToMenu("search", true)
@@ -48,23 +56,34 @@ var pluginManagerMainMenu = new cliMenu.Menu([{label: "search", shortcut: "s", c
 
 var pluginManagerSearchMenu = new cliMenu.Menu([
     {label: "name", shortcut: "n", callback: function() {
-        var name = cliMenu.prompt("Name?")
-        console.log(name)
+        console.log("Name:")
+        var name = cliMenu.prompt(chalk.yellow("?"))
         if (isnullorempty(name)) {
-            console.log(chalk.red("Not a choice!"))
+            console.log(chalk.red("There is nothing entered!"))
             pluginManagerSearchMenu.jumpToChoice("name")
         }
-        console.log("da name " + name)
-        pluginManagerMenu.showMenu()
+        else {
+            pluginSearchResultMenu.data.searchForID = false
+            pluginSearchResultMenu.data.searchData = name
+            pluginSearchResultMenu.showMenu()
+        }
     }},
     {label: "id", shortcut: "i", callback: function() {
-        var name = cliMenu.prompt("ID?")
-        if (isnullorempty(name)) {
-            console.log(chalk.red("Not a choice!"))
+        console.log("ID:")
+        var id = cliMenu.prompt(chalk.yellow("?"))
+        if (isnullorempty(id)) {
+            console.log(chalk.red("There is nothing entered!"))
             pluginManagerSearchMenu.jumpToChoice("id")
         }
-        console.log("da id " + name)
-        pluginManagerMenu.showMenu()
+        if (!isNaN(id)) {
+            console.log(chalk.red("Invalid ID!"))
+            pluginManagerSearchMenu.jumpToChoice("id")
+        }
+        else {
+            pluginSearchResultMenu.data.searchForID = true
+            pluginSearchResultMenu.data.searchData = id
+            pluginSearchResultMenu.showMenu()
+        }
     }}
 ], function() {
     console.log("id, name")

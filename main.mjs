@@ -27,6 +27,19 @@ const ver = "2.0.0-Beta2";
 const serverDownloader = new ServerDownloader();
 
 /**
+ * Create menu.
+ */
+async function createMenu() {
+    let serverType = await inquirer.prompt([
+        {
+            name: "Select server type",
+            type: "list",
+            choices: serverDownloader.getServerTypes(),
+        },
+    ]);
+}
+
+/**
  * Help menu.
  */
 function helpMenu() {
@@ -81,6 +94,9 @@ async function mainMenu() {
             break;
         case "about":
             aboutMenu();
+            break;
+        case "create":
+            await createMenu();
             break;
     }
     await mainMenu();

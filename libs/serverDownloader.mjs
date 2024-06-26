@@ -59,21 +59,35 @@ class ServerDownloader {
                 downloaderID: downloader.id,
                 serverTypes: downloader.serverTypes.map((serverType) => {
                     return {
-                        serverType: serverType.serverTypeID,
+                        ...serverType,
                         serverVersions: [],
                     };
                 }),
             };
             for (let serverType of newDownloaderDatabase.serverTypes) {
-                const getVersionsResponse = await downloader.getVersions(downloader, serverType.serverType);
+                const getVersionsResponse = await downloader.getVersions(downloader, serverType.serverTypeID);
                 if (!getVersionsResponse.success) {
-                    error(`Failed to download versions for server type: ${serverType.serverType}!`);
+                    error(`Failed to download versions for server type: ${serverType.serverTypeID}!`);
                 } else {
                     serverType.serverVersions = getVersionsResponse.returnData;
                 }
             }
             this.database.push(newDownloaderDatabase);
         }
+    }
+
+    /**
+     * Gets all server types.
+     * @returns
+     */
+    getServerTypes() {
+        let serverTypes = [];
+        for (let downloaderDatabase of this.database) {
+            for (var serverType of downloaderDatabase.serverTypes) {
+                serverTypes.push(serverType.serverTypeName);
+            }
+        }
+        return serverTypes;
     }
 }
 

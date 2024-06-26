@@ -22,16 +22,42 @@ import { functionResponse, error } from "./errorHandler.mjs";
 
 class ServerDownloader {
     constructor() {
-        this.downloaders = [];
+        this.downloaders = [
+            {
+                id: "paperapi",
+                serverTypes: [
+                    {
+                        serverTypeID: "paper",
+                        serverTypeName: "paper",
+                    },
+                ],
+                buildlist: true,
+                baseURL: "https://api.papermc.io/v2/projects/",
+                getVersions: async (self, serverType) => {
+                    try {
+                        let response = await axios({
+                            method: "GET",
+                            url: `${self.baseURL}${serverType}`,
+                        });
+                        return functionResponse(true, null, response.data.versions);
+                    } catch (err) {
+                        return functionResponse(false, "requestError", err.code);
+                    }
+                },
+            },
+        ];
 
         this.database = [];
     }
 
+    /**
+     * Fetches the database for all downloaders.
+     */
     async fetchDatabase() {
         for (let downloader of this.downloaders) {
             let newDownloaderDatabase = {
                 downloaderID: downloader.id,
-                serverTypes: downloader.serverTypes.map(async (serverType) => {
+                serverTypes: downloader.serverTypes.map((serverType) => {
                     return {
                         serverType: serverType.serverTypeID,
                         serverVersions: [],

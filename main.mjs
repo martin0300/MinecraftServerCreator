@@ -20,8 +20,11 @@ import chalk from "chalk";
 import process from "process";
 import * as interactivePrompt from "inquirer-interactive-list-prompt";
 import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
+import ServerDownloader from "./libs/serverDownloader.mjs";
+import { info } from "./libs/errorHandler.mjs";
 
 const ver = "2.0.0-Beta2";
+const serverDownloader = new ServerDownloader();
 
 /**
  * Help menu.
@@ -83,4 +86,9 @@ async function mainMenu() {
     await mainMenu();
 }
 
+//Fetch database
+info("Fetching database...");
+await serverDownloader.fetchDatabase();
+
+//Launch main menu
 mainMenu();

@@ -19,6 +19,7 @@
 ### Specification
 
 **Every function response must use functionResponse!**
+Downloaders can include other values that can be accessed using the self parameter.
 self is a link to the main downloader object.
 
 -   id: Identifier of the downloader.

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2023  Martin Magyar
+    Copyright (C) 2024  Martin Magyar
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -14,3 +14,73 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+import inquirer from "inquirer";
+import chalk from "chalk";
+import process from "process";
+import * as interactivePrompt from "inquirer-interactive-list-prompt";
+import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
+
+const ver = "2.0.0-Beta2";
+
+/**
+ * Help menu.
+ */
+function helpMenu() {
+    console.log("Coming soon!");
+    pressEnterToContinue();
+}
+
+/**
+ * About menu.
+ */
+function aboutMenu() {
+    console.log(`MinecraftServerCreator ${chalk.blue(`V${ver} written by martin0300.`)}`);
+    pressEnterToContinue();
+}
+
+/**
+ * Main menu of MinecraftServerCreator.
+ */
+async function mainMenu() {
+    console.log(`Welcome to MinecraftServerCreator ${chalk.blue(`V${ver}`)}`);
+    let choice = await interactivePrompt.default({
+        message: "Select an option",
+        choices: [
+            {
+                name: "create",
+                value: "create",
+                key: "c",
+            },
+            {
+                name: "about",
+                value: "about",
+                key: "a",
+            },
+            {
+                name: "help",
+                value: "help",
+                key: "h",
+            },
+            {
+                name: "exit",
+                value: "exit",
+                key: "e",
+            },
+        ],
+    });
+    switch (choice) {
+        case "exit":
+            process.exit(0);
+            break;
+        case "help":
+            helpMenu();
+            break;
+        case "about":
+            aboutMenu();
+            break;
+    }
+    await mainMenu();
+}
+
+mainMenu();

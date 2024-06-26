@@ -18,7 +18,6 @@
 import inquirer from "inquirer";
 import chalk from "chalk";
 import process from "process";
-import * as interactivePrompt from "inquirer-interactive-list-prompt";
 import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
 import ServerDownloader from "./libs/serverDownloader.mjs";
 import { info } from "./libs/errorHandler.mjs";
@@ -37,6 +36,7 @@ async function createMenu() {
             choices: serverDownloader.getServerTypes(),
         },
     ]);
+    return;
 }
 
 /**
@@ -60,32 +60,14 @@ function aboutMenu() {
  */
 async function mainMenu() {
     console.log(`Welcome to MinecraftServerCreator ${chalk.blue(`V${ver}`)}`);
-    let choice = await interactivePrompt.default({
-        message: "Select an option",
-        choices: [
-            {
-                name: "create",
-                value: "create",
-                key: "c",
-            },
-            {
-                name: "about",
-                value: "about",
-                key: "a",
-            },
-            {
-                name: "help",
-                value: "help",
-                key: "h",
-            },
-            {
-                name: "exit",
-                value: "exit",
-                key: "e",
-            },
-        ],
-    });
-    switch (choice) {
+    let choice = await inquirer.prompt([
+        {
+            name: "Select an option",
+            type: "list",
+            choices: ["create", "about", "help", "exit"],
+        },
+    ]);
+    switch (choice["Select an option"]) {
         case "exit":
             process.exit(0);
             break;
@@ -107,4 +89,4 @@ info("Fetching database...");
 await serverDownloader.fetchDatabase();
 
 //Launch main menu
-mainMenu();
+await mainMenu();

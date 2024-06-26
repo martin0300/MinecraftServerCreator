@@ -4,8 +4,6 @@
 
 **Optional values are indicated with "?"**
 
-self is a link to the main downloader object.
-
 ### Must include
 
 -   id (string)
@@ -19,6 +17,9 @@ self is a link to the main downloader object.
 -   getBuildlist (function(self, serverType <type: string>, serverVersion <type: string>))
 
 ### Specification
+
+**Every function response must use functionResponse!**
+self is a link to the main downloader object.
 
 -   id: Identifier of the downloader.
 -   serverTypes: A list containing objects with keys serverTypeID and serverTypeName. This will be displayed in the menu.

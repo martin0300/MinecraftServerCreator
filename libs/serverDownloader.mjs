@@ -44,6 +44,17 @@ class ServerDownloader {
                         return functionResponse(false, "requestError", err.code);
                     }
                 },
+                getBuildlist: async (self, serverType, serverVersion) => {
+                    try {
+                        let response = await axios({
+                            method: "GET",
+                            url: `${self.baseURL}${serverType}/versions/${serverVersion}`,
+                        });
+                        return functionResponse(true, null, response.data.builds);
+                    } catch (err) {
+                        return functionResponse(false, "requestError", err.code);
+                    }
+                },
             },
         ];
 
@@ -124,6 +135,26 @@ class ServerDownloader {
             return functionResponse(false, "invalidServerTypeID");
         }
         return functionResponse(true, null, serverTypeDatabase.serverVersions);
+    }
+
+    /**
+     * Gets buildlist for server version.
+     * @param {string} downloaderID
+     * @param {string} serverType
+     * @param {string} serverVersion
+     * @returns
+     */
+    async getBuildlist(downloaderID, serverType, serverVersion) {
+        const downloader = this.downloaders.find((downloaderFind) => downloaderFind.id === downloaderID);
+        if (downloader === undefined) {
+            return functionResponse(false, "invalidDownloaderID");
+        }
+        const builds = await downloader.getBuildlist(downloader, serverType, serverVersion);
+        if (!builds.success) {
+            return functionResponse(true, null, builds.returnData);
+        } else {
+            return builds;
+        }
     }
 }
 

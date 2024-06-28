@@ -113,11 +113,11 @@ async function createMenu() {
                         }
                     } else {
                         buildVersionChoose = getBuildlistRequirement.returnCode;
-                    }
-                    if (guidedMode) {
-                        currentMenu = "serverVersion";
-                    } else {
-                        currentMenu = "selectMenu";
+                        if (guidedMode) {
+                            currentMenu = "serverVersion";
+                        } else {
+                            currentMenu = "selectMenu";
+                        }
                     }
                 }
                 break;
@@ -129,6 +129,7 @@ async function createMenu() {
                     } else {
                         currentMenu = "selectMenu";
                     }
+                    break;
                 }
                 var getServerVersionsResponse = serverDownloader.getServerVersions(currentConfig.serverTypeDownloaderID, currentConfig.serverTypeID);
                 if (!getServerVersionsResponse.success) {
@@ -142,6 +143,7 @@ async function createMenu() {
                     } else {
                         currentMenu = "selectMenu";
                     }
+                    break;
                 }
                 var { serverVersion } = await enquirer.prompt({
                     message: "Select server version",
@@ -157,9 +159,74 @@ async function createMenu() {
                         currentMenu = "selectMenu";
                     }
                 } else {
-                    console.log(serverVersion);
+                    currentConfig.serverVersion = serverVersion;
+                    if (guidedMode) {
+                        if (buildVersionChoose) {
+                            currentMenu = "buildChooser";
+                        } else {
+                            currentMenu = "installLocation";
+                        }
+                    } else {
+                        currentMenu = "selectMenu";
+                    }
                 }
                 break;
+            case "buildChooser":
+                if (currentConfig.serverVersion === "") {
+                    console.log("Select a server version first!");
+                    if (guidedMode) {
+                        currentMenu = "serverVersion";
+                    } else {
+                        currentMenu = "selectMenu";
+                    }
+                    break;
+                }
+                var builds = await serverDownloader.getBuildlist(currentConfig.serverTypeDownloaderID, currentConfig.serverTypeID, currentConfig.serverVersion);
+                if (!builds.success) {
+                    if (builds.returnCode === "invalidDownloaderID") {
+                        error("Invalid downloaderID! (Internal Error)");
+                    } else {
+                        error("Failed to get buildlist! Please check your network connection!");
+                    }
+                    if (guidedMode) {
+                        currentMenu = "serverVersion";
+                    } else {
+                        currentMenu = "selectMenu";
+                    }
+                    break;
+                }
+                var { buildNumber } = await enquirer.prompt({
+                    message: "Select build number",
+                    name: "buildNumber",
+                    type: "autocomplete",
+                    limit: 10,
+                    choices: ["latest", ...builds.returnData.map((build) => build.toString()), "back"],
+                });
+                if (buildNumber === "back") {
+                    if (guidedMode) {
+                        currentMenu = "serverVersion";
+                    } else {
+                        currentMenu = "selectMenu";
+                    }
+                    break;
+                } else if (buildNumber === "latest") {
+                    currentConfig.buildNumber = "latest";
+                } else {
+                    currentConfig.buildNumber = Number(buildNumber);
+                }
+                if (guidedMode) {
+                    currentMenu = "installLocation";
+                } else {
+                    currentMenu = "selectMenu";
+                }
+                break;
+            case "installLocation":
+                var { installLocation } = await enquirer.prompt({
+                    message: "Enter install location: (enter nothing to go back)",
+                    name: "installLocation",
+                    type: "input",
+                });
+                console.log(installLocation);
         }
     }
 }

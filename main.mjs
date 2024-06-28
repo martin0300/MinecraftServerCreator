@@ -46,6 +46,45 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
+    let guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation"];
+    const back = () => {
+        if (!guidedMode) {
+            currentMenu = "selectMenu";
+        }
+        const currentMenuIndex = guidedMenuOrder.indexOf(currentMenu);
+        if (currentMenuIndex - 1 >= 0) {
+            let newCurrentMenu = guidedMenuOrder[currentMenuIndex - 1];
+            if (newCurrentMenu === "buildChooser") {
+                if (buildVersionChoose) {
+                    if (currentMenuIndex - 2 >= 0) {
+                        newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
+                    } else {
+                        return;
+                    }
+                }
+            }
+            currentMenu = newCurrentMenu;
+        }
+    };
+    const next = () => {
+        if (!guidedMode) {
+            currentMenu = "selectMenu";
+        }
+        const currentMenuIndex = guidedMenuOrder.indexOf(currentMenu);
+        if (currentMenuIndex + 1 <= guidedMenuOrder.length - 1) {
+            let newCurrentMenu = guidedMenuOrder[currentMenuIndex + 1];
+            if (newCurrentMenu === "buildChooser") {
+                if (!buildVersionChoose) {
+                    if (currentMenuIndex + 2 <= guidedMenuOrder.length + 2) {
+                        newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
+                    } else {
+                        return;
+                    }
+                }
+            }
+            currentMenu = newCurrentMenu;
+        }
+    };
     while (true) {
         switch (currentMenu) {
             case "modeChooser":
@@ -70,10 +109,10 @@ async function createMenu() {
                 });
                 if (mode === "guided") {
                     guidedMode = true;
-                    currentMenu = "serverType";
+                    next();
                 } else if (mode === "select") {
                     guidedMode = false;
-                    currentMenu = "selectMenu";
+                    next();
                 } else {
                     return;
                 }
@@ -90,11 +129,7 @@ async function createMenu() {
                     choices: [...serverTypes.map((serverType) => serverType.serverTypeName), "back"],
                 });
                 if (serverTypeChoice === "back") {
-                    if (guidedMode) {
-                        currentMenu = "modeChooser";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                 } else {
                     currentConfig.serverType = serverTypeChoice;
 
@@ -106,29 +141,17 @@ async function createMenu() {
                     var getBuildlistRequirement = serverDownloader.downloaderBuildlist(serverType.downloaderID);
                     if (!getBuildlistRequirement.success) {
                         error("Invalid serverType! (Internal Error)");
-                        if (guidedMode) {
-                            currentMenu = "modeChooser";
-                        } else {
-                            currentMenu = "selectMenu";
-                        }
+                        back();
                     } else {
                         buildVersionChoose = getBuildlistRequirement.returnCode;
-                        if (guidedMode) {
-                            currentMenu = "serverVersion";
-                        } else {
-                            currentMenu = "selectMenu";
-                        }
+                        next();
                     }
                 }
                 break;
             case "serverVersion":
                 if (currentConfig.serverTypeID === "") {
                     console.log("Select a server type first!");
-                    if (guidedMode) {
-                        currentMenu = "serverType";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                     break;
                 }
                 var getServerVersionsResponse = serverDownloader.getServerVersions(currentConfig.serverTypeDownloaderID, currentConfig.serverTypeID);
@@ -138,11 +161,7 @@ async function createMenu() {
                     } else if (getServerVersionsResponse.returnCode == "invalidServerTypeID") {
                         error("Invalid serverTypeID! (Internal Error)");
                     }
-                    if (guidedMode) {
-                        currentMenu = "serverType";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                     break;
                 }
                 var { serverVersion } = await enquirer.prompt({
@@ -153,32 +172,16 @@ async function createMenu() {
                     choices: [...getServerVersionsResponse.returnData, "back"],
                 });
                 if (serverVersion === "back") {
-                    if (guidedMode) {
-                        currentMenu = "serverType";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                 } else {
                     currentConfig.serverVersion = serverVersion;
-                    if (guidedMode) {
-                        if (buildVersionChoose) {
-                            currentMenu = "buildChooser";
-                        } else {
-                            currentMenu = "installLocation";
-                        }
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    next();
                 }
                 break;
             case "buildChooser":
                 if (currentConfig.serverVersion === "") {
                     console.log("Select a server version first!");
-                    if (guidedMode) {
-                        currentMenu = "serverVersion";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                     break;
                 }
                 var builds = await serverDownloader.getBuildlist(currentConfig.serverTypeDownloaderID, currentConfig.serverTypeID, currentConfig.serverVersion);
@@ -188,11 +191,7 @@ async function createMenu() {
                     } else {
                         error("Failed to get buildlist! Please check your network connection!");
                     }
-                    if (guidedMode) {
-                        currentMenu = "serverVersion";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                     break;
                 }
                 var { buildNumber } = await enquirer.prompt({
@@ -203,22 +202,14 @@ async function createMenu() {
                     choices: ["latest", ...builds.returnData.map((build) => build.toString()), "back"],
                 });
                 if (buildNumber === "back") {
-                    if (guidedMode) {
-                        currentMenu = "serverVersion";
-                    } else {
-                        currentMenu = "selectMenu";
-                    }
+                    back();
                     break;
                 } else if (buildNumber === "latest") {
                     currentConfig.buildNumber = "latest";
                 } else {
                     currentConfig.buildNumber = Number(buildNumber);
                 }
-                if (guidedMode) {
-                    currentMenu = "installLocation";
-                } else {
-                    currentMenu = "selectMenu";
-                }
+                next();
                 break;
             case "installLocation":
                 var { installLocation } = await enquirer.prompt({

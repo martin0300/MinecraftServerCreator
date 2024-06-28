@@ -46,7 +46,7 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
-    let guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation"];
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";

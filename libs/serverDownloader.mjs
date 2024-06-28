@@ -84,10 +84,46 @@ class ServerDownloader {
         let serverTypes = [];
         for (let downloaderDatabase of this.database) {
             for (var serverType of downloaderDatabase.serverTypes) {
-                serverTypes.push(serverType.serverTypeName);
+                serverTypes.push({
+                    serverTypeName: serverType.serverTypeName,
+                    serverTypeID: serverType.serverTypeID,
+                    downloaderID: downloaderDatabase.downloaderID,
+                });
             }
         }
         return serverTypes;
+    }
+
+    /**
+     * Returns if downloader requires a buildlist.
+     * @param {string} downloaderID
+     * @returns
+     */
+    downloaderBuildlist(downloaderID) {
+        const downloader = this.downloaders.find((downloaderFind) => downloaderFind.id === downloaderID);
+        if (downloader === undefined) {
+            return functionResponse(false, "invalidDownloaderID");
+        } else {
+            return functionResponse(true, downloader.buildlist);
+        }
+    }
+
+    /**
+     * Returns all versions for server type.
+     * @param {string} downloaderID
+     * @param {string} serverTypeID
+     * @returns
+     */
+    getServerVersions(downloaderID, serverTypeID) {
+        const downloaderDatabase = this.database.find((downloaderDatabaseFind) => downloaderDatabaseFind.downloaderID === downloaderID);
+        if (downloaderDatabase === undefined) {
+            return functionResponse(false, "invalidDownloaderID");
+        }
+        const serverTypeDatabase = downloaderDatabase.serverTypes.find((serverTypeFind) => serverTypeFind.serverTypeID === serverTypeID);
+        if (serverTypeDatabase === undefined) {
+            return functionResponse(false, "invalidServerTypeID");
+        }
+        return functionResponse(true, null, serverTypeDatabase.serverVersions);
     }
 }
 

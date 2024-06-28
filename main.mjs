@@ -55,7 +55,7 @@ async function createMenu() {
         if (currentMenuIndex - 1 >= 0) {
             let newCurrentMenu = guidedMenuOrder[currentMenuIndex - 1];
             if (newCurrentMenu === "buildChooser") {
-                if (buildVersionChoose) {
+                if (!buildVersionChoose) {
                     if (currentMenuIndex - 2 >= 0) {
                         newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
                     } else {
@@ -76,7 +76,7 @@ async function createMenu() {
             if (newCurrentMenu === "buildChooser") {
                 if (!buildVersionChoose) {
                     if (currentMenuIndex + 2 <= guidedMenuOrder.length + 2) {
-                        newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
+                        newCurrentMenu = guidedMenuOrder[currentMenuIndex + 2];
                     } else {
                         return;
                     }
@@ -217,7 +217,9 @@ async function createMenu() {
                     name: "installLocation",
                     type: "input",
                 });
-                console.log(installLocation);
+                if (installLocation === "") {
+                    back();
+                }
         }
     }
 }

@@ -21,6 +21,7 @@ import process from "process";
 import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
 import ServerDownloader from "./libs/serverDownloader.mjs";
 import { info, error } from "./libs/errorHandler.mjs";
+import fs from "fs";
 
 const ver = "2.0.0-Beta2";
 const serverDownloader = new ServerDownloader();
@@ -219,6 +220,7 @@ async function createMenu() {
                 });
                 if (installLocation === "") {
                     back();
+                } else if (fs.existsSync(installLocation)) {
                 }
         }
     }

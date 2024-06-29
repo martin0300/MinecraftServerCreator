@@ -220,7 +220,12 @@ async function createMenu() {
                 });
                 if (installLocation === "") {
                     back();
-                } else if (fs.existsSync(installLocation)) {
+                } else if (!fs.existsSync(installLocation)) {
+                    console.log("Invalid path!");
+                } else {
+                    currentConfig.installLocation = installLocation;
+                    console.log(currentConfig);
+                    next();
                 }
         }
     }

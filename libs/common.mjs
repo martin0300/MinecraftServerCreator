@@ -34,3 +34,24 @@ export function isValidFolderName(foldername) {
 
     return true;
 }
+
+/**
+ * Checks and converts ram input.
+ * @param {string} inputRAM
+ * @returns
+ */
+export function checkRAM(inputRAM) {
+    var ram;
+    if (/^\d+(\.\d+)?[gG][bB]?$/.test(inputRAM)) {
+        ram = inputRAM.toUpperCase().replace("GB", "G");
+    } else if (/^\d+[mM][bB]?$/.test(inputRAM)) {
+        ram = inputRAM.toUpperCase().replace("MB", "M");
+    } else {
+        if (!isNaN(inputRAM)) {
+            ram = inputRAM + "M";
+        } else {
+            return false;
+        }
+    }
+    return ram;
+}

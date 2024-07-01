@@ -22,7 +22,7 @@ import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
 import ServerDownloader from "./libs/serverDownloader.mjs";
 import { info, error } from "./libs/errorHandler.mjs";
 import fs from "fs";
-import { isValidFolderName } from "./libs/common.mjs";
+import { checkRAM, isValidFolderName } from "./libs/common.mjs";
 
 const ver = "2.0.0-Beta2";
 const serverDownloader = new ServerDownloader();
@@ -48,7 +48,7 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
-    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName"];
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
@@ -276,6 +276,53 @@ async function createMenu() {
                         currentConfig.createDirectory = false;
                     }
                 }
+                break;
+            case "minRAM":
+                var { minRAMInput } = await enquirer.prompt({
+                    message: `Enter the minimum amount of RAM for the server: (${chalk.green("MB")} or ${chalk.green("GB")}, defaults to ${chalk.green(
+                        "MB"
+                    )}) Leave it empty or type '${chalk.underline("b")}ack' to go back.`,
+                    type: "input",
+                    name: "minRAMInput",
+                });
+                if (minRAMInput === "") {
+                    currentConfig.minRAM = "default";
+                    next();
+                } else if (minRAMInput === "back" || minRAMInput === "b") {
+                    back();
+                } else {
+                    var minRAM = checkRAM(minRAMInput);
+                    if (minRAM === false) {
+                        console.log("Not a number or a valid ram amount!");
+                        break;
+                    }
+                    currentConfig.minRAM = minRAM;
+                    next();
+                }
+                break;
+            case "maxRAM":
+                var { maxRAMInput } = await enquirer.prompt({
+                    message: `Enter the maximum amount of RAM for the server: (${chalk.green("MB")} or ${chalk.green("GB")}, defaults to ${chalk.green(
+                        "MB"
+                    )}) Leave it empty or type '${chalk.underline("b")}ack' to go back.`,
+                    type: "input",
+                    name: "maxRAMInput",
+                });
+                if (maxRAMInput === "") {
+                    currentConfig.maxRAM = "default";
+                    next();
+                } else if (maxRAMInput === "back" || maxRAMInput === "b") {
+                    back();
+                } else {
+                    var maxRAM = checkRAM(maxRAMInput);
+                    if (maxRAM === false) {
+                        console.log("Not a number or a valid ram amount!");
+                        break;
+                    }
+                    currentConfig.maxRAM = maxRAM;
+                    next();
+                }
+                console.log(currentConfig);
                 break;
         }
     }

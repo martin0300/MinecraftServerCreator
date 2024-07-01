@@ -22,6 +22,7 @@ import pressEnterToContinue from "./libs/pressEnterToContinue.mjs";
 import ServerDownloader from "./libs/serverDownloader.mjs";
 import { info, error } from "./libs/errorHandler.mjs";
 import fs from "fs";
+import { isValidFolderName } from "./libs/common.mjs";
 
 const ver = "2.0.0-Beta2";
 const serverDownloader = new ServerDownloader();
@@ -47,7 +48,7 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
-    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation"];
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
@@ -224,9 +225,58 @@ async function createMenu() {
                     console.log("Invalid path!");
                 } else {
                     currentConfig.installLocation = installLocation;
-                    console.log(currentConfig);
                     next();
                 }
+                break;
+            case "serverName":
+                var { wantServerName } = await enquirer.prompt({
+                    message: `Do you want to set a server name? (${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack)`,
+                    type: "input",
+                    name: "wantServerName",
+                });
+                var continuePrompt = false;
+                switch (wantServerName) {
+                    case "yes":
+                    case "y":
+                        continuePrompt = true;
+                        next();
+                        break;
+                    case "no":
+                    case "n":
+                        currentConfig.serverName = "";
+                        currentConfig.createDirectory = false;
+                        next();
+                        break;
+                    case "back":
+                    case "b":
+                        back();
+                        break;
+                    default:
+                        console.log("Not a valid option!");
+                        break;
+                }
+                if (continuePrompt) {
+                    var { serverName } = await enquirer.prompt({
+                        message: `Enter server name:`,
+                        type: "input",
+                        name: "serverName",
+                    });
+                    currentConfig.serverName = serverName;
+
+                    if (isValidFolderName(currentConfig.serverName)) {
+                        var { createDirectory } = await enquirer.prompt({
+                            message: "Do you want to create a directory with this name?",
+                            type: "toggle",
+                            enabled: "Yes",
+                            disabled: "No",
+                            name: "createDirectory",
+                        });
+                        currentConfig.createDirectory = createDirectory;
+                    } else {
+                        currentConfig.createDirectory = false;
+                    }
+                }
+                break;
         }
     }
 }

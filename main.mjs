@@ -48,7 +48,7 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
-    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM"];
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM", "createDataFile"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
@@ -230,7 +230,7 @@ async function createMenu() {
                 break;
             case "serverName":
                 var { wantServerName } = await enquirer.prompt({
-                    message: `Do you want to set a server name? (${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack)`,
+                    message: `Do you want to set a server name? [${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack]`,
                     type: "input",
                     name: "wantServerName",
                 });
@@ -322,7 +322,32 @@ async function createMenu() {
                     currentConfig.maxRAM = maxRAM;
                     next();
                 }
-                console.log(currentConfig);
+                break;
+            case "createDataFile":
+                var { createDataFile } = await enquirer.prompt({
+                    message: `Create server data file? (helps MinecraftServerCreator manage the server) [${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack]`,
+                    type: "input",
+                    name: "createDataFile",
+                });
+                switch (createDataFile) {
+                    case "yes":
+                    case "y":
+                        currentConfig.createDataFile = true;
+                        next();
+                        break;
+                    case "no":
+                    case "n":
+                        currentConfig.createDataFile = false;
+                        next();
+                        break;
+                    case "back":
+                    case "b":
+                        back();
+                        break;
+                    default:
+                        console.log("Not a valid option!");
+                        break;
+                }
                 break;
         }
     }

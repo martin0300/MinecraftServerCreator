@@ -35,7 +35,7 @@ async function createMenu() {
     let guidedMode = false;
     let currentMenu = "modeChooser";
     let buildVersionChoose = false;
-    let currentConfig = {
+    const defaultConfig = {
         serverType: "",
         serverTypeID: "",
         serverTypeDownloaderID: "",
@@ -48,10 +48,12 @@ async function createMenu() {
         maxRAM: "",
         createDataFile: true,
     };
-    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM", "createDataFile"];
+    let currentConfig;
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM", "createDataFile", "confirmInstall"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
+            return;
         }
         const currentMenuIndex = guidedMenuOrder.indexOf(currentMenu);
         if (currentMenuIndex - 1 >= 0) {
@@ -71,6 +73,7 @@ async function createMenu() {
     const next = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
+            return;
         }
         const currentMenuIndex = guidedMenuOrder.indexOf(currentMenu);
         if (currentMenuIndex + 1 <= guidedMenuOrder.length - 1) {
@@ -87,6 +90,7 @@ async function createMenu() {
             currentMenu = newCurrentMenu;
         }
     };
+    currentConfig = defaultConfig;
     while (true) {
         switch (currentMenu) {
             case "modeChooser":
@@ -347,6 +351,41 @@ async function createMenu() {
                     default:
                         console.log("Not a valid option!");
                         break;
+                }
+                break;
+            case "confirmInstall":
+                console.log(`Server type: ${chalk.magenta(currentConfig.serverType)}`);
+                console.log(`Server version: ${chalk.magenta(currentConfig.serverVersion)}`);
+                if (buildVersionChoose) console.log(`Server build: ${chalk.magenta(currentConfig.buildNumber)}`);
+                console.log(`Installation location: ${chalk.magenta(currentConfig.installLocation)}`);
+                if (currentConfig.serverName !== "") console.log(`Server name: ${chalk.magenta(currentConfig.serverName)}`);
+                if (isValidFolderName(serverName)) console.log(`Create directory: ${chalk.magenta(currentConfig.createDirectory)}`);
+                console.log(`Minimum ram: ${chalk.magenta(currentConfig.minRAM == "" ? "default" : currentConfig.minRAM)}`);
+                console.log(`Maximum ram: ${chalk.magenta(currentConfig.maxRAM == "" ? "default" : currentConfig.maxRAM)}`);
+                console.log(`Create data file: ${chalk.magenta(currentConfig.createDataFile ? "yes" : "no")}`);
+                var { confirmInstall } = await enquirer.prompt({
+                    message: `Is everything correct? [${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack/${chalk.underline("m")}enu]`,
+                    type: "input",
+                    name: "confirmInstall",
+                });
+                switch (confirmInstall) {
+                    case "yes":
+                    case "y":
+                        //install
+                        break;
+                    case "no":
+                    case "n":
+                        console.log("Restarting...");
+                        currentConfig = defaultConfig;
+                        currentMenu = "serverType";
+                        break;
+                    case "back":
+                    case "b":
+                        back();
+                        break;
+                    case "menu":
+                    case "m":
+                        return;
                 }
                 break;
         }

@@ -49,7 +49,7 @@ async function createMenu() {
         createDataFile: true,
     };
     let currentConfig;
-    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "minRAM", "maxRAM", "createDataFile", "confirmInstall"];
+    const guidedMenuOrder = ["modeChooser", "serverType", "serverVersion", "buildChooser", "installLocation", "serverName", "createDirectory", "minRAM", "maxRAM", "createDataFile", "confirmInstall"];
     const back = () => {
         if (!guidedMode) {
             currentMenu = "selectMenu";
@@ -60,6 +60,14 @@ async function createMenu() {
             let newCurrentMenu = guidedMenuOrder[currentMenuIndex - 1];
             if (newCurrentMenu === "buildChooser") {
                 if (!buildVersionChoose) {
+                    if (currentMenuIndex - 2 >= 0) {
+                        newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
+                    } else {
+                        return;
+                    }
+                }
+            } else if (newCurrentMenu === "createDirectory") {
+                if (!isValidFolderName(currentConfig.serverName)) {
                     if (currentMenuIndex - 2 >= 0) {
                         newCurrentMenu = guidedMenuOrder[currentMenuIndex - 2];
                     } else {
@@ -80,6 +88,14 @@ async function createMenu() {
             let newCurrentMenu = guidedMenuOrder[currentMenuIndex + 1];
             if (newCurrentMenu === "buildChooser") {
                 if (!buildVersionChoose) {
+                    if (currentMenuIndex + 2 <= guidedMenuOrder.length + 2) {
+                        newCurrentMenu = guidedMenuOrder[currentMenuIndex + 2];
+                    } else {
+                        return;
+                    }
+                }
+            } else if (newCurrentMenu === "createDirectory") {
+                if (!isValidFolderName(currentConfig.serverName)) {
                     if (currentMenuIndex + 2 <= guidedMenuOrder.length + 2) {
                         newCurrentMenu = guidedMenuOrder[currentMenuIndex + 2];
                     } else {
@@ -124,8 +140,106 @@ async function createMenu() {
                 }
                 break;
             case "selectMenu":
-                console.log("not implemented");
-                return;
+                var filters = ["buildChooser", "createDirectory"];
+                var menuChoices = [
+                    {
+                        message: `Server type: ${currentConfig.serverType === "" ? "Unspecified" : currentConfig.serverType}`,
+                        value: "serverType",
+                        name: "Server type",
+                    },
+                    {
+                        message: `Server version: ${currentConfig.serverVersion === "" ? "Unspecified" : currentConfig.serverVersion}`,
+                        value: "serverVersion",
+                        name: "Server version",
+                    },
+                    {
+                        message: `Server build: ${currentConfig.buildNumber === "" ? "Unspecified" : currentConfig.buildNumber}`,
+                        value: "buildChooser",
+                        name: "Server build",
+                    },
+                    {
+                        message: `Installation location: ${currentConfig.installLocation === "" ? "Unspecified" : currentConfig.installLocation}`,
+                        value: "installLocation",
+                        name: "Installation location",
+                    },
+                    {
+                        message: `Server name: ${currentConfig.serverName === "" ? "Unspecified" : currentConfig.serverName}`,
+                        value: "serverName",
+                        name: "Server name",
+                    },
+                    {
+                        message: `Create directory: ${currentConfig.createDirectory ? "yes" : "no"}`,
+                        value: "createDirectory",
+                        name: "Create directory",
+                    },
+                    {
+                        message: `Minimum ram: ${currentConfig.minRAM === "" ? "Unspecified" : currentConfig.minRAM}`,
+                        value: "minRAM",
+                        name: "Minimum ram",
+                    },
+                    {
+                        message: `Maximum ram: ${currentConfig.maxRAM === "" ? "Unspecified" : currentConfig.maxRAM}`,
+                        value: "maxRAM",
+                        name: "Maximum ram",
+                    },
+                    {
+                        message: `Create data file: ${currentConfig.createDataFile ? "yes" : "no"}`,
+                        value: "createDataFile",
+                        name: "Create data file",
+                    },
+                ];
+                var filteredMenuChoices = [];
+                for (var menuChoice of menuChoices) {
+                    if (filters.includes(menuChoice.value)) {
+                        switch (menuChoice.value) {
+                            case "buildChooser":
+                                if (buildVersionChoose) {
+                                    filteredMenuChoices.push(menuChoice);
+                                }
+                                break;
+                            case "createDirectory":
+                                if (isValidFolderName(currentConfig.serverName)) {
+                                    filteredMenuChoices.push(menuChoice);
+                                }
+                                break;
+                        }
+                    } else {
+                        filteredMenuChoices.push(menuChoice);
+                    }
+                }
+                var { selectedMenu } = await enquirer.prompt({
+                    message: "Current config:",
+                    type: "select",
+                    name: "selectedMenu",
+                    choices: [
+                        ...filteredMenuChoices,
+                        {
+                            role: "separator",
+                        },
+                        "install",
+                        "back",
+                    ],
+                });
+                switch (selectedMenu) {
+                    case "back":
+                        currentMenu = "modeChooser";
+                        break;
+                    case "install":
+                        //install
+                        break;
+                    default:
+                        for (var menuChoiceValueFind of menuChoices) {
+                            if (menuChoiceValueFind.name == selectedMenu) {
+                                currentMenu = menuChoiceValueFind.value;
+                                break;
+                            }
+                        }
+                        if (currentMenu == "selectMenu") {
+                            error("Failed to find menu for selection! (Internal Error)");
+                        }
+                        break;
+                }
+                break;
             case "serverType":
                 var serverTypes = serverDownloader.getServerTypes();
                 var { serverTypeChoice } = await enquirer.prompt({
@@ -243,7 +357,6 @@ async function createMenu() {
                     case "yes":
                     case "y":
                         continuePrompt = true;
-                        next();
                         break;
                     case "no":
                     case "n":
@@ -267,18 +380,37 @@ async function createMenu() {
                     });
                     currentConfig.serverName = serverName;
 
-                    if (isValidFolderName(currentConfig.serverName)) {
-                        var { createDirectory } = await enquirer.prompt({
-                            message: "Do you want to create a directory with this name?",
-                            type: "toggle",
-                            enabled: "Yes",
-                            disabled: "No",
-                            name: "createDirectory",
-                        });
-                        currentConfig.createDirectory = createDirectory;
-                    } else {
+                    next();
+
+                    if (!isValidFolderName(currentConfig.serverName)) {
                         currentConfig.createDirectory = false;
                     }
+                }
+                break;
+            case "createDirectory":
+                var { createDirectory } = await enquirer.prompt({
+                    message: `Do you want to create a directory with this name? [${chalk.underline("y")}es/${chalk.underline("n")}o/${chalk.underline("b")}ack]`,
+                    type: "input",
+                    name: "createDirectory",
+                });
+                switch (createDirectory) {
+                    case "yes":
+                    case "y":
+                        currentConfig.createDirectory = true;
+                        next();
+                        break;
+                    case "no":
+                    case "n":
+                        currentConfig.createDirectory = false;
+                        next();
+                        break;
+                    case "back":
+                    case "b":
+                        back();
+                        break;
+                    default:
+                        console.log("Not a valid option!");
+                        break;
                 }
                 break;
             case "minRAM":
@@ -359,7 +491,7 @@ async function createMenu() {
                 if (buildVersionChoose) console.log(`Server build: ${chalk.magenta(currentConfig.buildNumber)}`);
                 console.log(`Installation location: ${chalk.magenta(currentConfig.installLocation)}`);
                 if (currentConfig.serverName !== "") console.log(`Server name: ${chalk.magenta(currentConfig.serverName)}`);
-                if (isValidFolderName(serverName)) console.log(`Create directory: ${chalk.magenta(currentConfig.createDirectory)}`);
+                if (isValidFolderName(serverName)) console.log(`Create directory: ${chalk.magenta(currentConfig.createDirectory ? "yes" : "no")}`);
                 console.log(`Minimum ram: ${chalk.magenta(currentConfig.minRAM == "" ? "default" : currentConfig.minRAM)}`);
                 console.log(`Maximum ram: ${chalk.magenta(currentConfig.maxRAM == "" ? "default" : currentConfig.maxRAM)}`);
                 console.log(`Create data file: ${chalk.magenta(currentConfig.createDataFile ? "yes" : "no")}`);
@@ -386,6 +518,9 @@ async function createMenu() {
                     case "menu":
                     case "m":
                         return;
+                    default:
+                        console.log("Not a valid option!");
+                        break;
                 }
                 break;
         }
